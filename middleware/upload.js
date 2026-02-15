@@ -11,7 +11,7 @@ const storage = new CloudinaryStorage({
 
         const uniqueName = `${Date.now()}-${Math.round(Math.random() * 1e9)}`;
 
-        const params = {
+        return {
             folder: `product-catalog/${category}`,
             public_id: uniqueName,
             allowed_formats: ['jpg', 'jpeg', 'png', 'gif', 'webp', 'svg'],
@@ -19,15 +19,6 @@ const storage = new CloudinaryStorage({
                 { quality: 'auto', fetch_format: 'auto' },
             ],
         };
-
-        console.log('[Upload] Cloudinary params:', params);
-        console.log('[Upload] File info:', {
-            originalname: file.originalname,
-            mimetype: file.mimetype,
-            size: file.size,
-        });
-
-        return params;
     },
 });
 

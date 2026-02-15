@@ -2,9 +2,6 @@ const Product = require('../models/Product');
 const { CATEGORIES } = require('../models/Product');
 const cloudinary = require('../config/cloudinary');
 
-// ===================== HELPERS =====================
-
-// Sort mapping with fallback to newest
 const SORT_MAP = {
     newest: { dateAdded: -1 },
     oldest: { dateAdded: 1 },
@@ -17,7 +14,6 @@ function getSortOption(sort) {
     return SORT_MAP[sort] || SORT_MAP.newest;
 }
 
-// Destroy images on Cloudinary
 async function destroyImages(images) {
     if (!images || images.length === 0) return;
     const promises = images
@@ -28,34 +24,16 @@ async function destroyImages(images) {
     await Promise.allSettled(promises);
 }
 
-// Build image objects from Multer/Cloudinary uploaded files
 function buildImageObjects(files) {
-    if (!files || files.length === 0) {
-        console.log('[Controller] buildImageObjects: No files received');
-        return [];
-    }
-    console.log('[Controller] buildImageObjects: Processing', files.length, 'files');
-    return files.map((f, i) => {
-        console.log(`[Controller] File ${i}:`, {
-            path: f.path,
-            filename: f.filename,
-            originalname: f.originalname,
-            size: f.size,
-            allKeys: Object.keys(f),
-        });
-        return {
-            url: f.path,
-            public_id: f.filename,
-        };
-    });
+    if (!files || files.length === 0) return [];
+    return files.map((f) => ({
+        url: f.path,
+        public_id: f.filename,
+    }));
 }
 
-// ===================== PUBLIC CONTROLLERS =====================
-
-// GET /  — Home page
 exports.getHomePage = async (req, res, next) => {
     try {
-        // Prefer featured products; fall back to latest published
         let featured = await Product.find({
             isPublished: true,
             isFeatured: true,
@@ -79,7 +57,6 @@ exports.getHomePage = async (req, res, next) => {
     }
 };
 
-// GET /products  — Products listing
 exports.getProductsPage = async (req, res, next) => {
     try {
         const { q, category, page = 1, limit = 12, sort } = req.query;
@@ -131,7 +108,6 @@ exports.getProductsPage = async (req, res, next) => {
     }
 };
 
-// GET /products/:slug  — Product detail
 exports.getProductDetail = async (req, res, next) => {
     try {
         const product = await Product.findOne({
@@ -156,14 +132,10 @@ exports.getProductDetail = async (req, res, next) => {
     }
 };
 
-// GET /about
 exports.getAboutPage = (req, res) => {
     res.render('about', { title: 'About Us', currentPage: 'about' });
 };
 
-// ===================== API CONTROLLERS =====================
-
-// GET /api/products  — List (admin sees all, including soft-deleted)
 exports.listProducts = async (req, res, next) => {
     try {
         const { q, category, page = 1, limit = 50, sort } = req.query;
@@ -202,7 +174,6 @@ exports.listProducts = async (req, res, next) => {
     }
 };
 
-// GET /api/products/:id
 exports.getProduct = async (req, res, next) => {
     try {
         const product = await Product.findById(req.params.id);
@@ -214,7 +185,6 @@ exports.getProduct = async (req, res, next) => {
     }
 };
 
-// POST /api/products
 exports.createProduct = async (req, res, next) => {
     try {
         const {
@@ -227,9 +197,6 @@ exports.createProduct = async (req, res, next) => {
             isPublished,
             isFeatured,
         } = req.body;
-
-        console.log('[Controller] createProduct: req.files =', req.files ? req.files.length + ' files' : 'undefined');
-        console.log('[Controller] createProduct: req.body keys =', Object.keys(req.body));
 
         const images = buildImageObjects(req.files);
 
@@ -260,7 +227,6 @@ exports.createProduct = async (req, res, next) => {
         await product.save();
         res.status(201).json(product);
     } catch (err) {
-        // Clean up any uploaded images on failure
         if (req.files) {
             await destroyImages(buildImageObjects(req.files));
         }
@@ -268,7 +234,6 @@ exports.createProduct = async (req, res, next) => {
     }
 };
 
-// PUT /api/products/:id
 exports.updateProduct = async (req, res, next) => {
     try {
         const product = await Product.findById(req.params.id);
@@ -287,7 +252,6 @@ exports.updateProduct = async (req, res, next) => {
             existingImages,
         } = req.body;
 
-        // Parse which existing images to keep
         let keepImages = [];
         if (existingImages) {
             try {
@@ -300,19 +264,14 @@ exports.updateProduct = async (req, res, next) => {
             }
         }
 
-        // Find images to destroy (ones removed by the admin)
         const keepPublicIds = keepImages.map((img) => img.public_id);
         const imagesToDestroy = product.images.filter(
             (img) => !keepPublicIds.includes(img.public_id)
         );
         await destroyImages(imagesToDestroy);
 
-        // Merge kept + newly uploaded
-        console.log('[Controller] updateProduct: req.files =', req.files ? req.files.length + ' files' : 'undefined');
         const newImages = buildImageObjects(req.files);
         const finalImages = [...keepImages, ...newImages];
-
-        // Parse specs
         let specs = product.specifications;
         if (specifications) {
             try {
@@ -321,7 +280,6 @@ exports.updateProduct = async (req, res, next) => {
                         ? JSON.parse(specifications)
                         : specifications;
             } catch {
-                /* keep existing */
             }
         }
 
@@ -340,7 +298,6 @@ exports.updateProduct = async (req, res, next) => {
         await product.save();
         res.json(product);
     } catch (err) {
-        // Clean up newly uploaded images on failure
         if (req.files) {
             await destroyImages(buildImageObjects(req.files));
         }
@@ -348,17 +305,14 @@ exports.updateProduct = async (req, res, next) => {
     }
 };
 
-// DELETE /api/products/:id  — Soft delete
 exports.deleteProduct = async (req, res, next) => {
     try {
         const product = await Product.findById(req.params.id);
         if (!product || product.isDeleted)
             return res.status(404).json({ error: 'Product not found' });
 
-        // Destroy all Cloudinary images
         await destroyImages(product.images);
 
-        // Soft delete
         product.isDeleted = true;
         product.images = [];
         await product.save();
