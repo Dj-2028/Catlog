@@ -1,0 +1,140 @@
+/* ============= Custom Styles ============= */
+
+/* Nav links */
+.nav-link {
+  padding: 0.5rem 0.75rem;
+  border-radius: 0.5rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: #94a3b8;
+  transition: all 0.2s ease;
+}
+.nav-link:hover {
+  color: #ffffff;
+  background-color: rgba(30, 41, 59, 0.8);
+}
+.nav-active {
+  color: #5c8aff !important;
+  background-color: rgba(51, 102, 255, 0.1) !important;
+}
+
+/* Card hover animation */
+.product-card {
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+.product-card:hover {
+  transform: translateY(-6px);
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+}
+
+/* Image zoom on hover */
+.img-zoom {
+  transition: transform 0.5s ease;
+}
+.img-zoom:hover {
+  transform: scale(1.08);
+}
+
+/* Gradient text */
+.gradient-text {
+  background: linear-gradient(135deg, #5c8aff, #94b4ff);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* Shimmer skeleton */
+@keyframes shimmer {
+  0% { background-position: -200px 0; }
+  100% { background-position: calc(200px + 100%) 0; }
+}
+.skeleton {
+  background: linear-gradient(90deg, #1e293b 25%, #334155 50%, #1e293b 75%);
+  background-size: 200px 100%;
+  animation: shimmer 1.5s infinite;
+}
+
+/* Category pills */
+.category-pill {
+  transition: all 0.2s ease;
+}
+.category-pill:hover {
+  background-color: rgba(51, 102, 255, 0.2);
+  color: #5c8aff;
+}
+.category-pill.active {
+  background: linear-gradient(135deg, #3366ff, #1a4fff);
+  color: #ffffff;
+}
+
+/* Fade in animation */
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+.fade-in-up {
+  animation: fadeInUp 0.5s ease forwards;
+}
+
+/* Stagger children */
+.stagger-children > * {
+  opacity: 0;
+  animation: fadeInUp 0.5s ease forwards;
+}
+.stagger-children > *:nth-child(1) { animation-delay: 0.05s; }
+.stagger-children > *:nth-child(2) { animation-delay: 0.1s; }
+.stagger-children > *:nth-child(3) { animation-delay: 0.15s; }
+.stagger-children > *:nth-child(4) { animation-delay: 0.2s; }
+.stagger-children > *:nth-child(5) { animation-delay: 0.25s; }
+.stagger-children > *:nth-child(6) { animation-delay: 0.3s; }
+.stagger-children > *:nth-child(7) { animation-delay: 0.35s; }
+.stagger-children > *:nth-child(8) { animation-delay: 0.4s; }
+.stagger-children > *:nth-child(9) { animation-delay: 0.45s; }
+.stagger-children > *:nth-child(10) { animation-delay: 0.5s; }
+.stagger-children > *:nth-child(11) { animation-delay: 0.55s; }
+.stagger-children > *:nth-child(12) { animation-delay: 0.6s; }
+
+/* Scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+}
+::-webkit-scrollbar-track {
+  background: #0f172a;
+}
+::-webkit-scrollbar-thumb {
+  background: #334155;
+  border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #475569;
+}
+
+/* Hero gradient mesh */
+.hero-mesh {
+  background:
+    radial-gradient(ellipse at 20% 50%, rgba(51, 102, 255, 0.15) 0%, transparent 50%),
+    radial-gradient(ellipse at 80% 20%, rgba(94, 138, 255, 0.1) 0%, transparent 50%),
+    radial-gradient(ellipse at 50% 80%, rgba(13, 61, 230, 0.1) 0%, transparent 50%);
+}
+
+/* Glass effect */
+.glass {
+  background: rgba(15, 23, 42, 0.6);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(51, 65, 85, 0.3);
+}
+
+/* Pulse glow */
+@keyframes pulseGlow {
+  0%, 100% { box-shadow: 0 0 20px rgba(51, 102, 255, 0.2); }
+  50% { box-shadow: 0 0 40px rgba(51, 102, 255, 0.4); }
+}
+.pulse-glow {
+  animation: pulseGlow 3s ease-in-out infinite;
+}
