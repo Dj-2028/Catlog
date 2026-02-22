@@ -4,20 +4,39 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Admin Dashboard | CraftVault</title>
+    <title>Admin Dashboard | Inhouse Printing</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
         tailwind.config = {
+            darkMode: 'class',
             theme: {
                 extend: {
                     colors: {
-                        brand: { 50: '#f0f5ff', 100: '#e0eaff', 200: '#c2d5ff', 300: '#94b4ff', 400: '#5c8aff', 500: '#3366ff', 600: '#1a4fff', 700: '#0d3de6', 800: '#1033b8', 900: '#132f91', 950: '#0d1f5e' },
-                        surface: { 50: '#f8fafc', 100: '#f1f5f9', 200: '#e2e8f0', 300: '#cbd5e1', 400: '#94a3b8', 500: '#64748b', 600: '#475569', 700: '#334155', 800: '#1e293b', 900: '#0f172a', 950: '#020617' },
+                        brand: {
+                            50: '#fff7ed', 100: '#ffedd5', 200: '#fed7aa', 300: '#fdba74',
+                            400: '#fb923c', 500: '#f97316', 600: '#ea580c',
+                            700: '#c2410c', 800: '#9a3412', 900: '#7c2d12', 950: '#431407'
+                        },
+                        surface: {
+                            50: '#fafaf9', 100: '#f5f5f4', 200: '#e7e5e4', 300: '#d6d3d1',
+                            400: '#a8a29e', 500: '#78716c', 600: '#57534e',
+                            700: '#44403c', 800: '#292524', 900: '#1c1917', 950: '#0c0a09'
+                        },
                     },
-                    fontFamily: { sans: ['Inter', 'system-ui', 'sans-serif'], display: ['Outfit', 'system-ui', 'sans-serif'] },
+                    fontFamily: { sans: ['Inter', 'system-ui', 'sans-serif'], display: ['Nunito', 'Outfit', 'system-ui', 'sans-serif'] },
                 },
             },
         };
+    </script>
+    <!-- Sync theme from main site before first paint -->
+    <script>
+        (function () {
+            var s = localStorage.getItem('cv-theme');
+            var q = window.matchMedia('(prefers-color-scheme: dark)');
+            if (s === 'dark' || (!s && q.matches)) {
+                document.documentElement.classList.add('dark');
+            }
+        })();
     </script>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -25,23 +44,37 @@
         href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;500;600;700;800&display=swap"
         rel="stylesheet" />
     <style>
-        /* Scrollbar */
+        /* Scrollbar — dark */
         ::-webkit-scrollbar {
             width: 6px;
             height: 6px;
         }
 
-        ::-webkit-scrollbar-track {
-            background: #0f172a;
+        .dark ::-webkit-scrollbar-track {
+            background: #1c1917;
         }
 
-        ::-webkit-scrollbar-thumb {
-            background: #334155;
+        .dark ::-webkit-scrollbar-thumb {
+            background: #44403c;
             border-radius: 3px;
         }
 
-        ::-webkit-scrollbar-thumb:hover {
-            background: #475569;
+        .dark ::-webkit-scrollbar-thumb:hover {
+            background: #f97316;
+        }
+
+        /* Scrollbar — light */
+        html:not(.dark) ::-webkit-scrollbar-track {
+            background: #f1f5f9;
+        }
+
+        html:not(.dark) ::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 3px;
+        }
+
+        html:not(.dark) ::-webkit-scrollbar-thumb:hover {
+            background: #f97316;
         }
 
         /* Slide panel */
@@ -52,6 +85,136 @@
 
         .slide-panel.open {
             transform: translateX(0);
+        }
+
+        .overlay {
+            transition: opacity 0.3s ease;
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        .overlay.active {
+            opacity: 1;
+            pointer-events: all;
+        }
+
+        /* ── Light mode overrides ─────────────────────────────────────────────
+           When html does NOT have .dark, flip the surface palette to slate-light
+           so admin UI still looks polished in light mode.
+        ─────────────────────────────────────────────────────────────────────── */
+        html:not(.dark) body,
+        html:not(.dark) .bg-surface-950 {
+            background-color: #f1f5f9 !important;
+        }
+
+        html:not(.dark) .bg-surface-900 {
+            background-color: #ffffff !important;
+        }
+
+        /* opacity variants — header uses bg-surface-900/90, border-surface-800/50 */
+        html:not(.dark) .bg-surface-900\/90 {
+            background-color: rgba(255, 255, 255, 0.95) !important;
+        }
+
+        html:not(.dark) .bg-surface-900\/80 {
+            background-color: rgba(255, 255, 255, 0.85) !important;
+        }
+
+        html:not(.dark) .bg-surface-800 {
+            background-color: #f8fafc !important;
+        }
+
+        html:not(.dark) .bg-surface-700 {
+            background-color: #e2e8f0 !important;
+        }
+
+        html:not(.dark) .bg-black\/70 {
+            background-color: rgba(0, 0, 0, 0.6) !important;
+        }
+
+        /* Hover bgs */
+        html:not(.dark) .hover\:bg-surface-800\/30:hover {
+            background-color: rgba(226, 232, 240, 0.5) !important;
+        }
+
+        html:not(.dark) .hover\:bg-surface-700:hover {
+            background-color: #e2e8f0 !important;
+        }
+
+        html:not(.dark) .hover\:bg-surface-800:hover {
+            background-color: #f1f5f9 !important;
+        }
+
+        /* Opacity variants */
+        html:not(.dark) .bg-surface-800\/50 {
+            background-color: rgba(241, 245, 249, 0.6) !important;
+        }
+
+        html:not(.dark) .bg-brand-500\/10 {
+            background-color: rgba(249, 115, 22, 0.08) !important;
+        }
+
+        html:not(.dark) .bg-red-500\/10 {
+            background-color: rgba(239, 68, 68, 0.08) !important;
+        }
+
+        html:not(.dark) .bg-emerald-500\/10 {
+            background-color: rgba(16, 185, 129, 0.08) !important;
+        }
+
+        /* Borders */
+        html:not(.dark) .border-surface-800,
+        html:not(.dark) .border-surface-800\/50,
+        html:not(.dark) .border-surface-700 {
+            border-color: #e2e8f0 !important;
+        }
+
+        html:not(.dark) .border-dashed.border-surface-700 {
+            border-color: #cbd5e1 !important;
+        }
+
+        /* Text */
+        html:not(.dark) .text-white {
+            color: #0f172a !important;
+        }
+
+        html:not(.dark) .text-surface-200 {
+            color: #334155 !important;
+        }
+
+        html:not(.dark) .text-surface-300 {
+            color: #475569 !important;
+        }
+
+        html:not(.dark) .text-surface-400 {
+            color: #64748b !important;
+        }
+
+        html:not(.dark) .text-surface-500 {
+            color: #94a3b8 !important;
+        }
+
+        html:not(.dark) .text-surface-600 {
+            color: #cbd5e1 !important;
+        }
+
+        /* Input/textarea */
+        html:not(.dark) input:not([type=checkbox]):not([type=radio]),
+        html:not(.dark) textarea,
+        html:not(.dark) select {
+            background-color: #f8fafc !important;
+            border-color: #e2e8f0 !important;
+            color: #1e293b !important;
+        }
+
+        html:not(.dark) input::placeholder,
+        html:not(.dark) textarea::placeholder {
+            color: #94a3b8 !important;
+        }
+
+        /* Slide panel */
+        html:not(.dark) .slide-panel {
+            background: #ffffff !important;
         }
 
         .overlay {
@@ -103,15 +266,27 @@
                 <a href="/" class="flex items-center gap-2">
                     <div
                         class="w-8 h-8 rounded-lg bg-gradient-to-br from-brand-500 to-brand-700 flex items-center justify-center text-white font-display font-bold">
-                        C</div>
-                    <span class="font-display font-bold text-lg text-white hidden sm:block">Craft<span
-                            class="text-brand-400">Vault</span></span>
+                        I</div>
+                    <span class="font-display font-bold text-lg text-white hidden sm:block">Inhouse<span
+                            class="text-brand-400">Printing</span></span>
                 </a>
                 <span class="text-surface-600 hidden sm:block">|</span>
                 <h1 class="font-display font-semibold text-surface-300 text-sm sm:text-base">Admin Dashboard</h1>
             </div>
             <div class="flex items-center gap-3">
                 <a href="/" class="text-surface-400 hover:text-surface-200 transition-colors text-sm">View Site</a>
+                <!-- Theme toggle -->
+                <button id="dashThemeToggle" title="Toggle light / dark mode"
+                    class="p-1.5 rounded-lg text-surface-500 hover:text-brand-400 transition-colors">
+                    <svg id="dashIconMoon" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
+                    </svg>
+                    <svg id="dashIconSun" class="w-5 h-5 hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
+                    </svg>
+                </button>
                 <a href="/logout"
                     class="px-4 py-2 rounded-lg bg-red-500/10 text-red-400 hover:bg-red-500/20 transition-colors text-sm font-medium">Logout</a>
             </div>
@@ -234,14 +409,9 @@
                     </div>
                     <div>
                         <label class="block text-sm font-medium text-surface-400 mb-1.5">Category</label>
-                        <select id="formCategory"
-                            class="w-full px-4 py-2.5 rounded-xl bg-surface-800 border border-surface-700 text-surface-200 focus:outline-none focus:border-brand-500 focus:ring-1 focus:ring-brand-500 text-sm">
-                            <option value="Key Chains">Key Chains</option>
-                            <option value="Trophies">Trophies</option>
-                            <option value="Gift Items">Gift Items</option>
-                            <option value="Visiting Cards">Visiting Cards</option>
-                            <option value="Pamphlets">Pamphlets</option>
-                        </select>
+                        <input type="text" id="formCategory"
+                            class="w-full px-4 py-2.5 rounded-xl bg-surface-800 border border-surface-700 text-surface-200 placeholder-surface-500 focus:outline-none focus:border-brand-500 focus:ring-1 focus:ring-brand-500 text-sm"
+                            placeholder="e.g. Key Chains, Trophies…" />
                     </div>
                 </div>
 
@@ -271,10 +441,13 @@
                 </div>
 
                 <div>
-                    <label class="block text-sm font-medium text-surface-400 mb-1.5">Upload Images</label>
+                    <div class="flex items-center justify-between mb-1.5">
+                        <label class="block text-sm font-medium text-surface-400">Upload Images</label>
+                        <span id="imageCounter" class="text-xs text-surface-500">0 / 6 images</span>
+                    </div>
                     <div class="relative">
                         <input type="file" id="formImages" multiple accept="image/*" class="hidden"
-                            onchange="previewImages(this)" />
+                            onchange="handleImagePick(this)" />
                         <button type="button" onclick="document.getElementById('formImages').click()"
                             class="w-full px-4 py-6 rounded-xl border-2 border-dashed border-surface-700 hover:border-brand-500 transition-colors text-center">
                             <svg class="w-8 h-8 mx-auto mb-2 text-surface-500" fill="none" stroke="currentColor"
@@ -282,7 +455,8 @@
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
                                     d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
                             </svg>
-                            <span class="text-surface-500 text-sm">Click to upload (max 5 images, 5MB each)</span>
+                            <span class="text-surface-500 text-sm">Click to add images (max 6 total,
+                                auto-compressed)</span>
                         </button>
                     </div>
                     <div id="newImagesPreview" class="grid grid-cols-4 gap-2 mt-2"></div>
@@ -342,6 +516,37 @@
     <div id="toastContainer" class="fixed bottom-4 right-4 z-[70] space-y-2"></div>
 
     <script src="/js/admin.js"></script>
+
+    <script>
+        // ── Dashboard theme toggle ───────────────────────────────
+        var _html = document.documentElement;
+        var _dMoon = document.getElementById('dashIconMoon');
+        var _dSun = document.getElementById('dashIconSun');
+
+        function _dashApplyTheme(dark) {
+            _html.classList.toggle('dark', dark);
+            if (_dMoon) _dMoon.classList.toggle('hidden', dark);
+            if (_dSun) _dSun.classList.toggle('hidden', !dark);
+        }
+
+        // Sync icon state after DOM is ready (anti-flash already ran in <head>)
+        var _saved = localStorage.getItem('cv-theme');
+        var _sys = window.matchMedia('(prefers-color-scheme: dark)').matches;
+        _dashApplyTheme(_saved === 'dark' || (!_saved && _sys));
+
+        var _btn = document.getElementById('dashThemeToggle');
+        if (_btn) {
+            _btn.addEventListener('click', function () {
+                var isDark = !_html.classList.contains('dark');
+                localStorage.setItem('cv-theme', isDark ? 'dark' : 'light');
+                _dashApplyTheme(isDark);
+            });
+        }
+
+        window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', function (e) {
+            if (!localStorage.getItem('cv-theme')) _dashApplyTheme(e.matches);
+        });
+    </script>
 </body>
 
 </html>

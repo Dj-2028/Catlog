@@ -6,26 +6,9 @@ const { MongoStore } = require('connect-mongo');
 const expressLayouts = require('express-ejs-layouts');
 const path = require('path');
 const multer = require('multer');
+const helmet = require('helmet');
+const rateLimit = require('express-rate-limit');
 
-// --------------- Validate Required Env Vars ---------------
-const REQUIRED_ENV = [
-    'MONGO_URI',
-    'SESSION_SECRET',
-    'ADMIN_USERNAME',
-    'ADMIN_PASSWORD',
-    'CLOUDINARY_CLOUD_NAME',
-    'CLOUDINARY_API_KEY',
-    'CLOUDINARY_API_SECRET',
-];
-
-const missing = REQUIRED_ENV.filter((key) => !process.env[key]);
-if (missing.length > 0) {
-    console.error(
-        `✗ Missing required environment variables:\n  ${missing.join('\n  ')}`
-    );
-    console.error('  → Please check your .env file');
-    process.exit(1);
-}
 
 const app = express();
 
@@ -34,6 +17,47 @@ app.set('view engine', 'ejs');
 app.set('views', path.join(__dirname, 'views'));
 app.use(expressLayouts);
 app.set('layout', 'layout');
+app.set('trust proxy', 1);
+
+// Helmet
+app.use(
+    helmet({
+        contentSecurityPolicy: {
+            directives: {
+                defaultSrc: ["'self'"],
+                scriptSrc: ["'self'", "'unsafe-inline'", "'unsafe-eval'",
+                    'https://cdn.tailwindcss.com', 'https:', 'http:'],
+                scriptSrcAttr: ["'unsafe-inline'"],
+                styleSrc: ["'self'", "'unsafe-inline'",
+                    'https://cdn.tailwindcss.com', 'https:', 'http:'],
+                fontSrc: ["'self'", 'https:', 'http:', 'data:'],
+                imgSrc: ["'self'", 'data:', 'blob:', 'https:', 'http:'],
+                connectSrc: ["'self'", 'https:'],
+                frameSrc: ["'none'"],
+                objectSrc: ["'none'"],
+            },
+        },
+        crossOriginEmbedderPolicy: false,
+    })
+);
+
+// Rate limiters
+const authLimiter = rateLimit({
+    windowMs: 15 * 60 * 1000,
+    max: 10,
+    standardHeaders: true,
+    legacyHeaders: false,
+    message: 'Too many requests from this IP, please try again after 15 minutes.',
+    skip: (req) => req.session && req.session.isAdmin,
+});
+
+const apiLimiter = rateLimit({
+    windowMs: 10 * 60 * 1000,
+    max: 100,
+    standardHeaders: true,
+    legacyHeaders: false,
+    message: { error: 'Too many API requests, please slow down.' },
+});
 
 // --------------- Middleware ---------------
 app.use(express.json());
@@ -50,11 +74,15 @@ app.use(
             mongoUrl: process.env.MONGO_URI,
             collectionName: 'sessions',
         }),
-        cookie: { maxAge: 1000 * 60 * 60 * 24 }, // 1 day
+        cookie: {
+            maxAge: 1000 * 60 * 60 * 24,
+            httpOnly: true,
+            secure: process.env.NODE_ENV === 'production',
+            sameSite: 'lax',
+        },
     })
 );
 
-// Make session available in all EJS views
 app.use((req, res, next) => {
     res.locals.isAdmin = req.session && req.session.isAdmin;
     next();
@@ -67,9 +95,9 @@ const adminRoutes = require('./routes/admin');
 const apiRoutes = require('./routes/api');
 
 app.use('/', publicRoutes);
-app.use('/', authRoutes);
+app.use('/', authLimiter, authRoutes);
 app.use('/', adminRoutes);
-app.use('/api/products', apiRoutes);
+app.use('/api/products', apiLimiter, apiRoutes);
 
 // --------------- 404 Handler ---------------
 app.use((req, res) => {
@@ -86,7 +114,6 @@ app.use((err, req, res, next) => {
 
     const isApi = req.originalUrl.startsWith('/api/');
 
-    // Multer errors (file size, field count, etc.)
     if (err instanceof multer.MulterError) {
         const msg =
             err.code === 'LIMIT_FILE_SIZE'
@@ -100,26 +127,6 @@ app.use((err, req, res, next) => {
         });
     }
 
-    // Image file type rejection from upload middleware
-    if (err.message && err.message.includes('Only image files')) {
-        if (isApi) return res.status(400).json({ error: err.message });
-        return res.status(400).render('error', {
-            title: 'Upload Error',
-            message: err.message,
-            currentPage: '',
-        });
-    }
-
-    // Mongoose validation errors
-    if (err.name === 'ValidationError') {
-        const messages = Object.values(err.errors).map((e) => e.message);
-        if (isApi) return res.status(400).json({ error: messages.join(', ') });
-        return res.status(400).render('error', {
-            title: 'Validation Error',
-            message: messages.join(', '),
-            currentPage: '',
-        });
-    }
 
     // Duplicate key error
     if (err.code === 11000) {
@@ -158,7 +165,7 @@ mongoose
     .then(() => {
         console.log('✓ MongoDB connected');
         app.listen(PORT, () => {
-            console.log(`✓ Server running on http://localhost:${PORT}`);
+            console.log(`✓ Server running on ${PORT}`);
         });
     })
     .catch((err) => {

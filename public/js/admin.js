@@ -4,6 +4,10 @@ const API = '/api/products';
 let allProducts = [];
 let deleteProductId = null;
 
+// Accumulated files across multiple picks (fixes "previous files vanish" bug)
+let accumulatedFiles = [];
+const MAX_IMAGES = 6;
+
 // ------------- Initial Load -------------
 document.addEventListener('DOMContentLoaded', () => {
   loadProducts();
@@ -67,6 +71,9 @@ function renderTable(products) {
       </td>
       <td class="px-4 py-3">
         <div class="flex items-center justify-end gap-2">
+          ${p.slug ? `<a href="/products/${p.slug}" target="_blank" class="p-2 rounded-lg hover:bg-surface-700 transition-colors text-surface-400 hover:text-emerald-400" title="View public page">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
+          </a>` : ''}
           <button onclick="editProduct('${p._id}')" class="p-2 rounded-lg hover:bg-surface-700 transition-colors text-surface-400 hover:text-brand-400" title="Edit">
             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
           </button>
@@ -82,10 +89,7 @@ function renderTable(products) {
 // ------------- Search -------------
 function handleSearch(e) {
   const query = e.target.value.toLowerCase().trim();
-  if (!query) {
-    renderTable(allProducts);
-    return;
-  }
+  if (!query) { renderTable(allProducts); return; }
   const filtered = allProducts.filter(p =>
     p.name.toLowerCase().includes(query) ||
     p.serialNo.toLowerCase().includes(query) ||
@@ -103,23 +107,20 @@ function openPanel(product = null) {
   resetForm();
 
   if (product) {
-    // Edit mode
     title.textContent = 'Edit Product';
     document.getElementById('productId').value = product._id;
     document.getElementById('formName').value = product.name || '';
     document.getElementById('formSerialNo').value = product.serialNo || '';
     document.getElementById('formPrice').value = product.price || 0;
-    document.getElementById('formCategory').value = product.category || 'Key Chains';
+    document.getElementById('formCategory').value = product.category || '';
     document.getElementById('formDescription').value = product.description || '';
     document.getElementById('formPublished').checked = product.isPublished !== false;
     document.getElementById('formFeatured').checked = product.isFeatured === true;
 
-    // Populate spec rows
     if (product.specifications && Object.keys(product.specifications).length > 0) {
       Object.entries(product.specifications).forEach(([key, val]) => addSpecRow(key, val));
     }
 
-    // Show existing images (now objects with {url, public_id})
     if (product.images && product.images.length > 0) {
       document.getElementById('existingImages').value = JSON.stringify(product.images);
       const grid = document.getElementById('existingImagesGrid');
@@ -167,7 +168,6 @@ function removeExistingImage(idx) {
   images.splice(idx, 1);
   document.getElementById('existingImages').value = JSON.stringify(images);
 
-  // Re-render
   const grid = document.getElementById('existingImagesGrid');
   if (images.length === 0) {
     document.getElementById('existingImagesPreview').classList.add('hidden');
@@ -184,25 +184,111 @@ function removeExistingImage(idx) {
   }
 }
 
-// ------------- Preview New Images -------------
-function previewImages(input) {
-  const preview = document.getElementById('newImagesPreview');
-  preview.innerHTML = '';
-  if (input.files) {
-    Array.from(input.files).forEach(file => {
-      const reader = new FileReader();
-      reader.onload = function (e) {
-        preview.innerHTML += `
-          <div class="aspect-square rounded-lg overflow-hidden border border-surface-700">
-            <img src="${e.target.result}" class="w-full h-full object-cover" />
-          </div>`;
-      };
-      reader.readAsDataURL(file);
-    });
-  }
+// ─── Image helpers ────────────────────────────────────────────────────────────
+
+/**
+ * Compress a single File using canvas to fit within maxWidth × maxHeight
+ * and quality setting. Returns a Promise<Blob>.
+ */
+function compressImage(file, maxWidth = 1200, maxHeight = 1200, quality = 0.78) {
+  return new Promise((resolve) => {
+    const img = new Image();
+    const url = URL.createObjectURL(file);
+    img.onload = function () {
+      URL.revokeObjectURL(url);
+      let { width, height } = img;
+
+      // Scale down if needed
+      if (width > maxWidth || height > maxHeight) {
+        const ratio = Math.min(maxWidth / width, maxHeight / height);
+        width = Math.round(width * ratio);
+        height = Math.round(height * ratio);
+      }
+
+      const canvas = document.createElement('canvas');
+      canvas.width = width;
+      canvas.height = height;
+      canvas.getContext('2d').drawImage(img, 0, 0, width, height);
+
+      canvas.toBlob(
+        (blob) => resolve(blob || file),   // fallback to original if toBlob fails
+        'image/jpeg',
+        quality
+      );
+    };
+    img.onerror = () => { URL.revokeObjectURL(url); resolve(file); };
+    img.src = url;
+  });
 }
 
-// ------------- Form Submit (Create/Update) -------------
+/**
+ * Accumulate newly picked files into accumulatedFiles (max MAX_IMAGES total).
+ * Avoids duplicates by filename. Then re-render the preview grid.
+ */
+function handleImagePick(input) {
+  const existingCount = JSON.parse(document.getElementById('existingImages').value || '[]').length;
+  const allowedNew = MAX_IMAGES - existingCount;
+
+  Array.from(input.files).forEach(file => {
+    if (
+      accumulatedFiles.length < allowedNew &&
+      !accumulatedFiles.find(f => f.name === file.name && f.size === file.size)
+    ) {
+      accumulatedFiles.push(file);
+    }
+  });
+
+  // Reset the native input value so the same file can be re-picked
+  input.value = '';
+
+  renderNewImagesPreview();
+  updateImageCounter();
+}
+
+function removeNewImage(idx) {
+  accumulatedFiles.splice(idx, 1);
+  renderNewImagesPreview();
+  updateImageCounter();
+}
+
+function renderNewImagesPreview() {
+  const preview = document.getElementById('newImagesPreview');
+  if (accumulatedFiles.length === 0) {
+    preview.innerHTML = '';
+    return;
+  }
+  preview.innerHTML = '';
+  accumulatedFiles.forEach((file, idx) => {
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const div = document.createElement('div');
+      div.className = 'relative group aspect-square rounded-lg overflow-hidden border border-surface-700';
+      div.innerHTML = `
+        <img src="${e.target.result}" class="w-full h-full object-cover" />
+        <button type="button" onclick="removeNewImage(${idx})"
+          class="absolute inset-0 bg-black/60 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+          <svg class="w-5 h-5 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+          </svg>
+        </button>`;
+      preview.appendChild(div);
+    };
+    reader.readAsDataURL(file);
+  });
+}
+
+function updateImageCounter() {
+  const el = document.getElementById('imageCounter');
+  if (!el) return;
+  const existingCount = JSON.parse(document.getElementById('existingImages').value || '[]').length;
+  const total = existingCount + accumulatedFiles.length;
+  el.textContent = `${total} / ${MAX_IMAGES} images`;
+  el.className = total >= MAX_IMAGES
+    ? 'text-xs text-amber-400 font-medium'
+    : 'text-xs text-surface-500';
+}
+
+// ─── Form Submit ─────────────────────────────────────────────────────────────
 async function handleSubmit(e) {
   e.preventDefault();
 
@@ -212,7 +298,7 @@ async function handleSubmit(e) {
   formData.append('name', document.getElementById('formName').value);
   formData.append('serialNo', document.getElementById('formSerialNo').value);
   formData.append('price', document.getElementById('formPrice').value || '0');
-  formData.append('category', document.getElementById('formCategory').value);
+  formData.append('category', document.getElementById('formCategory').value.trim());
   formData.append('description', document.getElementById('formDescription').value);
   formData.append('isPublished', document.getElementById('formPublished').checked);
   formData.append('isFeatured', document.getElementById('formFeatured').checked);
@@ -222,27 +308,27 @@ async function handleSubmit(e) {
     formData.append('specifications', JSON.stringify(specs));
   }
 
-  // Existing images (for update) — send as JSON array of {url, public_id}
   if (id) {
     formData.append('existingImages', document.getElementById('existingImages').value);
-  }
-
-  // New images
-  const files = document.getElementById('formImages').files;
-  if (files) {
-    Array.from(files).forEach(file => formData.append('images', file));
   }
 
   const submitBtn = document.getElementById('submitBtn');
   const originalText = submitBtn.textContent;
   submitBtn.disabled = true;
-  submitBtn.textContent = 'Saving...';
+  submitBtn.textContent = 'Compressing & Saving…';
   submitBtn.classList.add('opacity-50', 'cursor-not-allowed');
 
   try {
+    // Compress all accumulated images before upload
+    for (const file of accumulatedFiles) {
+      const compressed = await compressImage(file);
+      // Give the blob a name so multer can detect the MIME type
+      const namedBlob = new File([compressed], file.name.replace(/\.[^.]+$/, '.jpg'), { type: 'image/jpeg' });
+      formData.append('images', namedBlob);
+    }
+
     const url = id ? `${API}/${id}` : API;
     const method = id ? 'PUT' : 'POST';
-
     const res = await fetch(url, { method, body: formData });
     const data = await res.json();
 
@@ -314,7 +400,6 @@ function showToast(message, type = 'info') {
   toast.className = `toast px-5 py-3 rounded-xl border ${colors[type] || colors.info} text-sm font-medium shadow-lg backdrop-blur-xl`;
   toast.textContent = message;
   container.appendChild(toast);
-
   setTimeout(() => toast.remove(), 3000);
 }
 
@@ -325,7 +410,7 @@ function resetForm() {
   document.getElementById('formName').value = '';
   document.getElementById('formSerialNo').value = '';
   document.getElementById('formPrice').value = '';
-  document.getElementById('formCategory').value = 'Key Chains';
+  document.getElementById('formCategory').value = '';
   document.getElementById('formDescription').value = '';
   document.getElementById('specsContainer').innerHTML = '';
   document.getElementById('formPublished').checked = true;
@@ -334,6 +419,8 @@ function resetForm() {
   document.getElementById('newImagesPreview').innerHTML = '';
   document.getElementById('existingImagesGrid').innerHTML = '';
   document.getElementById('existingImagesPreview').classList.add('hidden');
+  accumulatedFiles = [];
+  updateImageCounter();
 }
 
 // ------------- Spec Row Helpers -------------
@@ -356,8 +443,7 @@ function addSpecRow(key = '', value = '') {
 
 function getSpecsFromRows() {
   const specs = {};
-  const rows = document.querySelectorAll('#specsContainer > div');
-  rows.forEach(row => {
+  document.querySelectorAll('#specsContainer > div').forEach(row => {
     const key = row.querySelector('.spec-key').value.trim();
     const val = row.querySelector('.spec-value').value.trim();
     if (key) specs[key] = val;
