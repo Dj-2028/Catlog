@@ -263,12 +263,12 @@
     <header class="fixed top-0 w-full z-50 bg-surface-900/90 backdrop-blur-xl border-b border-surface-800/50">
         <div class="flex items-center justify-between px-4 sm:px-6 h-16">
             <div class="flex items-center gap-3">
-                <a href="/" class="flex items-center gap-2">
-                    <div
-                        class="w-8 h-8 rounded-lg bg-gradient-to-br from-brand-500 to-brand-700 flex items-center justify-center text-white font-display font-bold">
-                        I</div>
-                    <span class="font-display font-bold text-lg text-white hidden sm:block">Inhouse<span
-                            class="text-brand-400">Printing</span></span>
+                <a href="/" class="flex items-center gap-2 group">
+                    <img src="/assets/inhouse.png" alt="Inhouse Printing Logo"
+                        class="h-14 w-auto object-contain drop-shadow-sm group-hover:scale-105 transition-transform hidden sm:block" />
+                    <!-- Mobile only logo icon (if you have one) or fallback to smaller image -->
+                    <img src="/assets/inhouse.png" alt="Logo"
+                        class="h-10 w-auto object-contain drop-shadow-sm sm:hidden" />
                 </a>
                 <span class="text-surface-600 hidden sm:block">|</span>
                 <h1 class="font-display font-semibold text-surface-300 text-sm sm:text-base">Admin Dashboard</h1>
