@@ -1,5 +1,5 @@
 const Product = require('../models/Product');
-const { CATEGORIES } = require('../models/Product');
+const Category = require('../models/Category');
 const cloudinary = require('../config/cloudinary');
 
 const SORT_MAP = {
@@ -76,17 +76,16 @@ exports.getProductsPage = async (req, res, next) => {
         const limitNum = Math.min(50, Math.max(1, parseInt(limit)));
         const skip = (pageNum - 1) * limitNum;
 
-        const [products, totalCount, categories] = await Promise.all([
+        const [products, totalCount, categoryDocs] = await Promise.all([
             Product.find(query)
                 .sort(getSortOption(sort))
                 .skip(skip)
                 .limit(limitNum),
             Product.countDocuments(query),
-            Product.distinct('category', {
-                isPublished: true,
-                isDeleted: { $ne: true },
-            }),
+            Category.find().sort({ name: 1 })
         ]);
+
+        const categories = categoryDocs.map(c => c.name);
 
         res.render('products', {
             title: 'Our Products',
