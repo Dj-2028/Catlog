@@ -1,0 +1,52 @@
+const Category = require('../models/Category');
+
+exports.seedCategories = async () => {
+    try {
+        const count = await Category.countDocuments();
+        if (count === 0) {
+            const defaults = ['Uncategorized', 'Key Chains', 'Trophies', 'Gift Items', 'Visiting Cards', 'Pamphlets'];
+            await Category.insertMany(defaults.map(n => ({ name: n })));
+            console.log('✓ Seeded default categories');
+        }
+    } catch (e) {
+        console.error('Error seeding categories:', e);
+    }
+};
+
+exports.getCategories = async (req, res, next) => {
+    try {
+        const categories = await Category.find().sort({ name: 1 });
+        res.json(categories);
+    } catch (err) {
+        next(err);
+    }
+};
+
+exports.createCategory = async (req, res, next) => {
+    try {
+        const { name } = req.body;
+        if (!name || !name.trim()) return res.status(400).json({ error: 'Category name is required' });
+
+        let category = await Category.findOne({ name: new RegExp(`^${name.trim()}$`, 'i') });
+        if (category) {
+            return res.status(400).json({ error: 'Category already exists' });
+        }
+
+        category = new Category({ name: name.trim() });
+        await category.save();
+        res.status(201).json(category);
+    } catch (err) {
+        next(err);
+    }
+};
+
+exports.deleteCategory = async (req, res, next) => {
+    try {
+        const { id } = req.params;
+        const category = await Category.findByIdAndDelete(id);
+        if (!category) return res.status(404).json({ error: 'Category not found' });
+        res.json({ message: 'Category deleted', id });
+    } catch (err) {
+        next(err);
+    }
+};

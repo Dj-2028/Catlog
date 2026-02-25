@@ -2,6 +2,7 @@
 
 const API = '/api/products';
 let allProducts = [];
+let allCategories = [];
 let deleteProductId = null;
 
 // Accumulated files across multiple picks (fixes "previous files vanish" bug)
@@ -11,8 +12,10 @@ const MAX_IMAGES = 6;
 // ------------- Initial Load -------------
 document.addEventListener('DOMContentLoaded', () => {
   loadProducts();
+  loadCategories();
   document.getElementById('productForm').addEventListener('submit', handleSubmit);
   document.getElementById('searchInput').addEventListener('input', debounce(handleSearch, 300));
+  setupCategoryDropdown();
 });
 
 // ------------- Load Products -------------
@@ -465,4 +468,137 @@ function escapeHtml(str) {
   const div = document.createElement('div');
   div.textContent = str;
   return div.innerHTML;
+}
+
+// ------------- Category Management -------------
+async function loadCategories() {
+  try {
+    const res = await fetch('/api/products/categories');
+    if (!res.ok) throw new Error('Failed to fetch categories');
+    allCategories = await res.json();
+    renderCategoryDropdown();
+  } catch (err) {
+    showToast('Failed to load categories', 'error');
+  }
+}
+
+function renderCategoryDropdown() {
+  const list = document.getElementById('categoryList');
+  if (!list) return;
+
+  const inputVal = document.getElementById('formCategory').value.trim().toLowerCase();
+
+  // Filter categories based on input wrapper
+  const filtered = allCategories.filter(c => c.name.toLowerCase().includes(inputVal));
+
+  if (filtered.length === 0 && inputVal !== '') {
+    list.innerHTML = `<li class="px-3 py-2 text-sm text-surface-500 text-center">No matches found</li>`;
+  } else {
+    list.innerHTML = filtered.map(c => `
+          <li class="group flex items-center justify-between px-3 py-2 hover:bg-surface-700 cursor-pointer text-sm text-surface-200" onclick="selectCategory('${escapeHtml(c.name).replace(/'/g, "\\'")}')">
+              <span class="flex-1">${escapeHtml(c.name)}</span>
+              <button type="button" onclick="deleteCategory('${c._id}', event)" class="p-1 text-surface-500 hover:text-red-400 opacity-0 group-hover:opacity-100 transition-opacity" title="Delete category">
+                  <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+              </button>
+          </li>
+      `).join('');
+  }
+}
+
+function selectCategory(name) {
+  document.getElementById('formCategory').value = name;
+  document.getElementById('categoryDropdown').classList.add('hidden');
+  document.getElementById('categoryAddWrapper').classList.add('hidden');
+}
+
+async function addCategory(name) {
+  try {
+    const res = await fetch('/api/products/categories', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ name })
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || 'Failed to add category');
+    showToast('Category added', 'success');
+    await loadCategories();
+    selectCategory(name);
+  } catch (err) {
+    showToast(err.message, 'error');
+  }
+}
+
+async function deleteCategory(id, e) {
+  e.stopPropagation(); // prevent selectCategory
+  if (!confirm('Delete this category? Existing products will retain it.')) return;
+  try {
+    const res = await fetch('/api/products/categories/' + id, { method: 'DELETE' });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || 'Failed to delete');
+    showToast('Category deleted', 'success');
+    await loadCategories();
+  } catch (err) {
+    showToast(err.message, 'error');
+  }
+}
+
+function setupCategoryDropdown() {
+  const input = document.getElementById('formCategory');
+  const toggle = document.getElementById('categoryDropdownBtn');
+  const dropdown = document.getElementById('categoryDropdown');
+  const wrapper = document.getElementById('categoryWrapper');
+  const addWrapper = document.getElementById('categoryAddWrapper');
+  const addNameSpan = document.getElementById('newCategoryName');
+  const addBtn = document.getElementById('categoryAddBtn');
+
+  if (!input || !toggle) return;
+
+  // Show/hide dropdown on toggle click
+  toggle.addEventListener('click', (e) => {
+    e.stopPropagation();
+    const isHidden = dropdown.classList.contains('hidden');
+    if (isHidden) {
+      input.value = ''; // clear to show all
+      renderCategoryDropdown();
+      addWrapper.classList.add('hidden');
+      dropdown.classList.remove('hidden');
+      input.focus();
+    } else {
+      dropdown.classList.add('hidden');
+    }
+  });
+
+  // Show dropdown on focus
+  input.addEventListener('focus', () => {
+    renderCategoryDropdown();
+    dropdown.classList.remove('hidden');
+  });
+
+  // Handle typing inside input
+  input.addEventListener('input', () => {
+    const val = input.value.trim();
+    renderCategoryDropdown();
+
+    // Check if value already exists
+    const exists = allCategories.find(c => c.name.toLowerCase() === val.toLowerCase());
+    if (val && !exists) {
+      addNameSpan.textContent = val;
+      addWrapper.classList.remove('hidden');
+    } else {
+      addWrapper.classList.add('hidden');
+    }
+  });
+
+  // Add category click
+  addBtn.addEventListener('click', () => {
+    const val = input.value.trim();
+    if (val) addCategory(val);
+  });
+
+  // Click outside to close
+  document.addEventListener('click', (e) => {
+    if (!wrapper.contains(e.target)) {
+      dropdown.classList.add('hidden');
+    }
+  });
 }

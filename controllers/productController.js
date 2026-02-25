@@ -217,7 +217,7 @@ exports.createProduct = async (req, res, next) => {
             description,
             price: parseFloat(price) || 0,
             serialNo,
-            category,
+            category: category || 'Uncategorized',
             specifications: specs,
             isPublished: isPublished === 'true' || isPublished === true,
             isFeatured: isFeatured === 'true' || isFeatured === true,
@@ -289,7 +289,7 @@ exports.updateProduct = async (req, res, next) => {
         product.price =
             price !== undefined ? parseFloat(price) || 0 : product.price;
         product.serialNo = serialNo || product.serialNo;
-        product.category = category || product.category;
+        product.category = category || product.category || 'Uncategorized';
         product.specifications = specs;
         product.isPublished = isPublished === 'true' || isPublished === true;
         product.isFeatured = isFeatured === 'true' || isFeatured === true;

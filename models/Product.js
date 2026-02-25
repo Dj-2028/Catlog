@@ -56,10 +56,6 @@ const productSchema = new mongoose.Schema({
     type: String,
     default: 'Uncategorized',
     trim: true,
-    enum: {
-      values: CATEGORIES,
-      message: '{VALUE} is not a valid category',
-    },
   },
   specifications: {
     type: mongoose.Schema.Types.Mixed,
@@ -94,4 +90,3 @@ productSchema.index({ isPublished: 1, isFeatured: 1 });
 productSchema.index({ name: 'text', serialNo: 'text' });
 
 module.exports = mongoose.model('Product', productSchema);
-module.exports.CATEGORIES = CATEGORIES;

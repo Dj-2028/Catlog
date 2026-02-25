@@ -140,6 +140,17 @@ app.use((err, req, res, next) => {
         });
     }
 
+    // Mongoose Validation Error
+    if (err.name === 'ValidationError') {
+        const msgs = Object.values(err.errors).map(val => val.message);
+        if (isApi) return res.status(400).json({ error: msgs.join('. ') });
+        return res.status(400).render('error', {
+            title: 'Validation Error',
+            message: msgs.join('. '),
+            currentPage: '',
+        });
+    }
+
     // Cloudinary errors
     if (err.http_code) {
         const msg = 'Image upload failed. Please try again.';
@@ -164,6 +175,7 @@ mongoose
     .connect(process.env.MONGO_URI)
     .then(() => {
         console.log('✓ MongoDB connected');
+        require('./controllers/categoryController').seedCategories();
         app.listen(PORT, () => {
             console.log(`✓ Server running on ${PORT}`);
         });
