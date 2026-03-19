@@ -43,9 +43,17 @@ exports.createCategory = async (req, res, next) => {
 exports.deleteCategory = async (req, res, next) => {
     try {
         const { id } = req.params;
-        const category = await Category.findByIdAndDelete(id);
+        const category = await Category.findById(id);
         if (!category) return res.status(404).json({ error: 'Category not found' });
-        res.json({ message: 'Category deleted', id });
+
+        const categoryName = category.name;
+        await Category.findByIdAndDelete(id);
+
+        // Update all products with this category to 'Uncategorized'
+        const Product = require('../models/Product');
+        await Product.updateMany({ category: categoryName }, { category: 'Uncategorized' });
+
+        res.json({ message: 'Category deleted and products updated', id });
     } catch (err) {
         next(err);
     }

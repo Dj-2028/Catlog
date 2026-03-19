@@ -307,9 +307,7 @@ async function handleSubmit(e) {
   formData.append('isFeatured', document.getElementById('formFeatured').checked);
 
   const specs = getSpecsFromRows();
-  if (Object.keys(specs).length > 0) {
-    formData.append('specifications', JSON.stringify(specs));
-  }
+  formData.append('specifications', JSON.stringify(specs));
 
   if (id) {
     formData.append('existingImages', document.getElementById('existingImages').value);
@@ -473,7 +471,7 @@ function escapeHtml(str) {
 // ------------- Category Management -------------
 async function loadCategories() {
   try {
-    const res = await fetch('/api/products/categories');
+    const res = await fetch('/api/categories');
     if (!res.ok) throw new Error('Failed to fetch categories');
     allCategories = await res.json();
     renderCategoryDropdown();
@@ -513,7 +511,7 @@ function selectCategory(name) {
 
 async function addCategory(name) {
   try {
-    const res = await fetch('/api/products/categories', {
+    const res = await fetch('/api/categories', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ name })
@@ -532,7 +530,7 @@ async function deleteCategory(id, e) {
   e.stopPropagation(); // prevent selectCategory
   if (!confirm('Delete this category? Existing products will retain it.')) return;
   try {
-    const res = await fetch('/api/products/categories/' + id, { method: 'DELETE' });
+    const res = await fetch('/api/categories/' + id, { method: 'DELETE' });
     const data = await res.json();
     if (!res.ok) throw new Error(data.error || 'Failed to delete');
     showToast('Category deleted', 'success');
@@ -558,7 +556,6 @@ function setupCategoryDropdown() {
     e.stopPropagation();
     const isHidden = dropdown.classList.contains('hidden');
     if (isHidden) {
-      input.value = ''; // clear to show all
       renderCategoryDropdown();
       addWrapper.classList.add('hidden');
       dropdown.classList.remove('hidden');

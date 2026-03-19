@@ -251,26 +251,27 @@ exports.updateProduct = async (req, res, next) => {
             existingImages,
         } = req.body;
 
-        let keepImages = [];
-        if (existingImages) {
+        let finalImages = product.images;
+        if (existingImages !== undefined) {
             try {
                 keepImages =
                     typeof existingImages === 'string'
                         ? JSON.parse(existingImages)
                         : existingImages;
             } catch {
-                keepImages = [];
+                keepImages = product.images;
             }
+            const keepPublicIds = keepImages.map((img) => img.public_id);
+            const imagesToDestroy = product.images.filter(
+                (img) => !keepPublicIds.includes(img.public_id)
+            );
+            await destroyImages(imagesToDestroy);
+            const newImages = buildImageObjects(req.files);
+            finalImages = [...keepImages, ...newImages];
+        } else {
+            const newImages = buildImageObjects(req.files);
+            finalImages = [...product.images, ...newImages];
         }
-
-        const keepPublicIds = keepImages.map((img) => img.public_id);
-        const imagesToDestroy = product.images.filter(
-            (img) => !keepPublicIds.includes(img.public_id)
-        );
-        await destroyImages(imagesToDestroy);
-
-        const newImages = buildImageObjects(req.files);
-        const finalImages = [...keepImages, ...newImages];
         let specs = product.specifications;
         if (specifications) {
             try {
@@ -290,8 +291,12 @@ exports.updateProduct = async (req, res, next) => {
         product.serialNo = serialNo || product.serialNo;
         product.category = category || product.category || 'Uncategorized';
         product.specifications = specs;
-        product.isPublished = isPublished === 'true' || isPublished === true;
-        product.isFeatured = isFeatured === 'true' || isFeatured === true;
+        if (isPublished !== undefined) {
+            product.isPublished = isPublished === 'true' || isPublished === true;
+        }
+        if (isFeatured !== undefined) {
+            product.isFeatured = isFeatured === 'true' || isFeatured === true;
+        }
         product.images = finalImages;
 
         await product.save();

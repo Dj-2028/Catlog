@@ -85,6 +85,7 @@ app.use(
 
 app.use((req, res, next) => {
     res.locals.isAdmin = req.session && req.session.isAdmin;
+    res.locals.whatsappNumber = process.env.WHATSAPP_NUMBER;
     next();
 });
 
@@ -97,7 +98,7 @@ const apiRoutes = require('./routes/api');
 app.use('/', publicRoutes);
 app.use('/', authLimiter, authRoutes);
 app.use('/', adminRoutes);
-app.use('/api/products', apiLimiter, apiRoutes);
+app.use('/api', apiLimiter, apiRoutes);
 
 // --------------- 404 Handler ---------------
 app.use((req, res) => {
