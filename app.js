@@ -85,6 +85,7 @@ app.use(
 
 app.use((req, res, next) => {
     res.locals.isAdmin = req.session && req.session.isAdmin;
+    res.locals.isDashboard = req.path.startsWith('/admin');
     res.locals.whatsappNumber = process.env.WHATSAPP_NUMBER;
     next();
 });

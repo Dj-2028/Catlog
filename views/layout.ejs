@@ -211,7 +211,7 @@
     </div>
   </footer>
 
-  <% if (!locals.isAdmin) { %>
+  <% if (!locals.isDashboard) { %>
     <!-- WhatsApp Floating Button -->
     <div id="whatsapp-float" class="fixed z-[100] cursor-move select-none touch-none"
       style="top: 50%; right: 1rem; transform: translateY(-50%);">
@@ -233,11 +233,9 @@
         const link = document.getElementById('whatsapp-link');
         let isDragging = false;
         let startX, startY, initialX, initialY;
-        let moved = false;
 
         floatBtn.addEventListener('pointerdown', (e) => {
-          isDragging = true;
-          moved = false;
+          // Just record start position, don't capture yet
           startX = e.clientX;
           startY = e.clientY;
 
@@ -245,21 +243,22 @@
           initialX = rect.left;
           initialY = rect.top;
 
-          floatBtn.style.transition = 'none';
-          floatBtn.setPointerCapture(e.pointerId);
+          isDragging = false;
         });
 
-        floatBtn.addEventListener('pointermove', (e) => {
-          if (!isDragging) return;
+        window.addEventListener('pointermove', (e) => {
+          if (!startX) return; // Not pressing
 
           const dx = e.clientX - startX;
           const dy = e.clientY - startY;
 
-          if (Math.abs(dx) > 10 || Math.abs(dy) > 10) {
-            moved = true;
+          if (!isDragging && (Math.abs(dx) > 10 || Math.abs(dy) > 10)) {
+            isDragging = true;
+            floatBtn.setPointerCapture(e.pointerId);
+            floatBtn.style.transition = 'none';
           }
 
-          if (moved) {
+          if (isDragging) {
             floatBtn.style.left = (initialX + dx) + 'px';
             floatBtn.style.top = (initialY + dy) + 'px';
             floatBtn.style.right = 'auto';
@@ -268,11 +267,11 @@
           }
         });
 
-        floatBtn.addEventListener('pointerup', (e) => {
-          if (!isDragging) return;
-          isDragging = false;
+        window.addEventListener('pointerup', (e) => {
+          if (!startX) return;
+          startX = null;
 
-          if (moved) {
+          if (isDragging) {
             floatBtn.style.transition = 'all 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275)';
             const centerX = window.innerWidth / 2;
 
@@ -287,16 +286,13 @@
             floatBtn.style.top = '50%';
             floatBtn.style.transform = 'translateY(-50%)';
 
-            // Special handling to block only this specific click if we moved
+            // Prevent the subsequent click event
             const blockClick = (ev) => {
               ev.preventDefault();
               ev.stopImmediatePropagation();
               link.removeEventListener('click', blockClick, true);
             };
             link.addEventListener('click', blockClick, true);
-          } else {
-            // If not moved, reset transition immediately just in case
-            floatBtn.style.transition = 'all 0.3s ease';
           }
         });
       })();
