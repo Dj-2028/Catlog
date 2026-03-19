@@ -215,7 +215,7 @@
     <!-- WhatsApp Floating Button -->
     <div id="whatsapp-float" class="fixed z-[100] cursor-move select-none touch-none"
       style="top: 50%; right: 1rem; transform: translateY(-50%);">
-      <a href="https://wa.me/<%= whatsappNumber %>" target="_blank" rel="noopener noreferrer" id="whatsapp-link"
+      <a href="https://api.whatsapp.com/send?phone=<%= whatsappNumber %>" target="_blank" rel="noopener noreferrer" id="whatsapp-link"
         class="flex items-center justify-center w-14 h-14 bg-[#25D366] rounded-full shadow-[0_8px_30px_rgb(37,211,102,0.4)] hover:scale-110 active:scale-95 transition-all duration-300 group">
         <svg class="w-8 h-8 text-white drop-shadow-sm" fill="currentColor" viewBox="0 0 448 512">
           <path
