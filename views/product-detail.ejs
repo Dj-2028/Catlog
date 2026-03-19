@@ -196,7 +196,7 @@
 
                                 <!-- CTA Buttons -->
                                 <div class="flex flex-col sm:flex-row gap-3 mt-auto">
-                                    <a href="https://wa.me/<%= String(whatsappNumber).replace(/[^0-9]/g, '') %>?text=<%= encodeURIComponent("Hello! 🌟 I'm inquiring about the *" + product.name + "* (SN: " + product.serialNo + "). Could you please provide more details? Thank you!") %>"
+                                    <a href="https://api.whatsapp.com/send?phone=<%= String(whatsappNumber).replace(/[^0-9]/g, '') %>&text=<%= encodeURIComponent('Hello! I am inquiring about the ' + product.name + ' (SN: ' + product.serialNo + '). Could you please provide more details? Thank you!') %>"
                                         target="_blank" rel="noopener noreferrer"
                                         class="inline-flex items-center justify-center gap-2 px-8 py-3.5 rounded-xl bg-gradient-to-r from-brand-600 to-brand-500 text-white font-semibold hover:from-brand-500 hover:to-brand-400 transition-all shadow-lg shadow-brand-500/25 hover:shadow-brand-500/40 hover:-translate-y-0.5 pulse-glow">
                                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
