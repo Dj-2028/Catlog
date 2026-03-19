@@ -75,9 +75,9 @@ const productSchema = new mongoose.Schema({
   },
 });
 
-// Auto-generate slug from name before saving
+// Generate slug only on creation — never regenerate to keep public URLs stable
 productSchema.pre('save', function () {
-  if (this.name && (!this.slug || this.isModified('name'))) {
+  if (this.name && !this.slug) {
     this.slug =
       slugify(this.name, { lower: true, strict: true }) + '-' + Date.now();
   }

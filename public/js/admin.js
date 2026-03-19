@@ -507,6 +507,9 @@ function selectCategory(name) {
   document.getElementById('formCategory').value = name;
   document.getElementById('categoryDropdown').classList.add('hidden');
   document.getElementById('categoryAddWrapper').classList.add('hidden');
+  // Sync savedCategoryValue so toggle-close restore doesn't overwrite the pick
+  // (savedCategoryValue is scoped inside setupCategoryDropdown but this is fine
+  //  since the dropdown is already closed here)
 }
 
 async function addCategory(name) {
@@ -527,8 +530,8 @@ async function addCategory(name) {
 }
 
 async function deleteCategory(id, e) {
-  e.stopPropagation(); // prevent selectCategory
-  if (!confirm('Delete this category? Existing products will retain it.')) return;
+  e.stopPropagation();
+  if (!confirm('Delete this category? All products under it will be moved to "Uncategorized".')) return;
   try {
     const res = await fetch('/api/categories/' + id, { method: 'DELETE' });
     const data = await res.json();
@@ -552,15 +555,21 @@ function setupCategoryDropdown() {
   if (!input || !toggle) return;
 
   // Show/hide dropdown on toggle click
+  let savedCategoryValue = '';
   toggle.addEventListener('click', (e) => {
     e.stopPropagation();
     const isHidden = dropdown.classList.contains('hidden');
     if (isHidden) {
+      // Save the current value, then clear so we can show the full list
+      savedCategoryValue = input.value;
+      input.value = '';
       renderCategoryDropdown();
       addWrapper.classList.add('hidden');
       dropdown.classList.remove('hidden');
       input.focus();
     } else {
+      // Restore if user closes without picking
+      if (!input.value.trim()) input.value = savedCategoryValue;
       dropdown.classList.add('hidden');
     }
   });

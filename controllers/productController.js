@@ -235,6 +235,7 @@ exports.createProduct = async (req, res, next) => {
 
 exports.updateProduct = async (req, res, next) => {
     try {
+        // Load product first — needed to compare images for Cloudinary deletion
         const product = await Product.findById(req.params.id);
         if (!product || product.isDeleted)
             return res.status(404).json({ error: 'Product not found' });
@@ -251,13 +252,14 @@ exports.updateProduct = async (req, res, next) => {
             existingImages,
         } = req.body;
 
+        // ── Image handling ────────────────────────────────────────────────────
+        let keepImages = [];
         let finalImages = product.images;
         if (existingImages !== undefined) {
             try {
-                keepImages =
-                    typeof existingImages === 'string'
-                        ? JSON.parse(existingImages)
-                        : existingImages;
+                keepImages = typeof existingImages === 'string'
+                    ? JSON.parse(existingImages)
+                    : existingImages;
             } catch {
                 keepImages = product.images;
             }
@@ -272,39 +274,43 @@ exports.updateProduct = async (req, res, next) => {
             const newImages = buildImageObjects(req.files);
             finalImages = [...product.images, ...newImages];
         }
-        let specs = product.specifications;
-        if (specifications) {
+
+        // ── Spec parsing ──────────────────────────────────────────────────────
+        let specs = product.specifications || {};
+        if (specifications !== undefined) {
             try {
-                specs =
-                    typeof specifications === 'string'
-                        ? JSON.parse(specifications)
-                        : specifications;
-            } catch {
-            }
+                specs = typeof specifications === 'string'
+                    ? JSON.parse(specifications)
+                    : specifications;
+            } catch { /* keep existing if JSON is malformed */ }
         }
 
-        product.name = name || product.name;
-        product.description =
-            description !== undefined ? description : product.description;
-        product.price =
-            price !== undefined ? parseFloat(price) || 0 : product.price;
-        product.serialNo = serialNo || product.serialNo;
-        product.category = category || product.category || 'Uncategorized';
-        product.specifications = specs;
-        if (isPublished !== undefined) {
-            product.isPublished = isPublished === 'true' || isPublished === true;
-        }
-        if (isFeatured !== undefined) {
-            product.isFeatured = isFeatured === 'true' || isFeatured === true;
-        }
-        product.images = finalImages;
+        // ── Build explicit $set payload ───────────────────────────────────────
+        // Using findByIdAndUpdate + $set guarantees every field is written to
+        // MongoDB directly — no Mongoose dirty-checking, no silent skips.
+        const updateFields = {
+            images: finalImages,
+            specifications: specs,
+            isPublished: isPublished === 'true' || isPublished === true,
+            isFeatured: isFeatured === 'true' || isFeatured === true,
+            category: (category && category.trim()) ? category.trim() : 'Uncategorized',
+        };
 
-        await product.save();
-        res.json(product);
+        if (description !== undefined) updateFields.description = description;
+        if (price !== undefined) updateFields.price = parseFloat(price) || 0;
+        // Name and serialNo: only update if a non-blank value is provided
+        if (name && name.trim()) updateFields.name = name.trim();
+        if (serialNo && serialNo.trim()) updateFields.serialNo = serialNo.trim();
+
+        const updated = await Product.findByIdAndUpdate(
+            req.params.id,
+            { $set: updateFields },
+            { new: true, runValidators: true }
+        );
+
+        res.json(updated);
     } catch (err) {
-        if (req.files) {
-            await destroyImages(buildImageObjects(req.files));
-        }
+        if (req.files) await destroyImages(buildImageObjects(req.files));
         next(err);
     }
 };
