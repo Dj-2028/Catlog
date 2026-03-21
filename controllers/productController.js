@@ -32,6 +32,33 @@ function buildImageObjects(files) {
     }));
 }
 
+const ensureCategoryExists = async (categoryName) => {
+    if (!categoryName || categoryName.trim() === 'Uncategorized') return 'Uncategorized';
+
+    const cleanName = categoryName.trim();
+    const existing = await Category.findOne({ name: new RegExp(`^${cleanName}$`, 'i') });
+
+    if (!existing) {
+        await Category.create({ name: cleanName });
+    }
+    return cleanName;
+};
+
+const cleanupOrphanedCategory = async (categoryName) => {
+    if (!categoryName || categoryName === 'Uncategorized') return;
+
+    const productCount = await Product.countDocuments({
+        category: categoryName,
+        isDeleted: { $ne: true }
+    });
+
+    if (productCount === 0) {
+        await Category.findOneAndDelete({ name: categoryName });
+        console.log(`Cleaned up orphaned category: ${categoryName}`);
+    }
+};
+
+
 exports.getHomePage = async (req, res, next) => {
     try {
         let featured = await Product.find({
@@ -199,6 +226,8 @@ exports.createProduct = async (req, res, next) => {
 
         const images = buildImageObjects(req.files);
 
+        const finalCategory = await ensureCategoryExists(category);
+
         let specs = {};
         if (specifications) {
             try {
@@ -235,7 +264,6 @@ exports.createProduct = async (req, res, next) => {
 
 exports.updateProduct = async (req, res, next) => {
     try {
-        // Load product first — needed to compare images for Cloudinary deletion
         const product = await Product.findById(req.params.id);
         if (!product || product.isDeleted)
             return res.status(404).json({ error: 'Product not found' });
@@ -252,7 +280,6 @@ exports.updateProduct = async (req, res, next) => {
             existingImages,
         } = req.body;
 
-        // ── Image handling ────────────────────────────────────────────────────
         let keepImages = [];
         let finalImages = product.images;
         if (existingImages !== undefined) {
@@ -275,19 +302,14 @@ exports.updateProduct = async (req, res, next) => {
             finalImages = [...product.images, ...newImages];
         }
 
-        // ── Spec parsing ──────────────────────────────────────────────────────
         let specs = product.specifications || {};
         if (specifications !== undefined) {
             try {
                 specs = typeof specifications === 'string'
                     ? JSON.parse(specifications)
                     : specifications;
-            } catch { /* keep existing if JSON is malformed */ }
+            } catch { }
         }
-
-        // ── Build explicit $set payload ───────────────────────────────────────
-        // Using findByIdAndUpdate + $set guarantees every field is written to
-        // MongoDB directly — no Mongoose dirty-checking, no silent skips.
         const updateFields = {
             images: finalImages,
             specifications: specs,
@@ -298,7 +320,6 @@ exports.updateProduct = async (req, res, next) => {
 
         if (description !== undefined) updateFields.description = description;
         if (price !== undefined) updateFields.price = parseFloat(price) || 0;
-        // Name and serialNo: only update if a non-blank value is provided
         if (name && name.trim()) updateFields.name = name.trim();
         if (serialNo && serialNo.trim()) updateFields.serialNo = serialNo.trim();
 
@@ -307,6 +328,10 @@ exports.updateProduct = async (req, res, next) => {
             { $set: updateFields },
             { new: true, runValidators: true }
         );
+
+        if (product.category && product.category !== finalCategory) {
+            await cleanupOrphanedCategory(product.category);
+        }
 
         res.json(updated);
     } catch (err) {
@@ -323,9 +348,13 @@ exports.deleteProduct = async (req, res, next) => {
 
         await destroyImages(product.images);
 
+        const categoryToCheck = product.category;
+
         product.isDeleted = true;
         product.images = [];
         await product.save();
+
+        await cleanupOrphanedCategory(categoryToCheck);
 
         res.json({ message: 'Product deleted successfully' });
     } catch (err) {

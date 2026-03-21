@@ -1,15 +1,6 @@
 const mongoose = require('mongoose');
 const slugify = require('slugify');
 
-const CATEGORIES = [
-  'Key Chains',
-  'Trophies',
-  'Gift Items',
-  'Visiting Cards',
-  'Pamphlets',
-  'Uncategorized',
-];
-
 const imageSchema = new mongoose.Schema(
   {
     url: { type: String, required: true },

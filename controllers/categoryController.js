@@ -58,3 +58,33 @@ exports.deleteCategory = async (req, res, next) => {
         next(err);
     }
 };
+
+exports.updateCategory = async (req, res, next) => {
+    try {
+        const { id } = req.params;
+        const { name } = req.body;
+
+        if (!name || !name.trim()) return res.status(400).json({ error: 'Category name is required' });
+
+        const category = await Category.findById(id);
+        if (!category) return res.status(404).json({ error: 'Category not found' });
+
+        const oldName = category.name;
+        const newName = name.trim();
+
+        const existing = await Category.findOne({ name: new RegExp(`^${newName}$`, 'i') });
+        if (existing && existing._id.toString() !== id) {
+            return res.status(400).json({ error: 'Category already exists' });
+        }
+
+        category.name = newName;
+        await category.save();
+
+        const Product = require('../models/Product');
+        await Product.updateMany({ category: oldName }, { category: newName });
+
+        res.json({ message: 'Category updated successfully', category });
+    } catch (err) {
+        next(err);
+    }
+};
