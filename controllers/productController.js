@@ -310,12 +310,15 @@ exports.updateProduct = async (req, res, next) => {
                     : specifications;
             } catch { }
         }
+
+        const finalCategory = await ensureCategoryExists(category);
+
         const updateFields = {
             images: finalImages,
             specifications: specs,
             isPublished: isPublished === 'true' || isPublished === true,
             isFeatured: isFeatured === 'true' || isFeatured === true,
-            category: (category && category.trim()) ? category.trim() : 'Uncategorized',
+            category: finalCategory,
         };
 
         if (description !== undefined) updateFields.description = description;
@@ -326,7 +329,7 @@ exports.updateProduct = async (req, res, next) => {
         const updated = await Product.findByIdAndUpdate(
             req.params.id,
             { $set: updateFields },
-            { new: true, runValidators: true }
+            { returnDocument: 'after', runValidators: true }
         );
 
         if (product.category && product.category !== finalCategory) {
