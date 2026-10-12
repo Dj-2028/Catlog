@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { ArrowRight, MessageSquareText, Layers } from 'lucide-react';
+import { ArrowRight, MessageSquareText, Layers, MessageCircle } from 'lucide-react';
 import type { Product } from '../types';
 import { useStore } from '../context/StoreContext';
 
@@ -9,7 +9,7 @@ interface ProductCardProps {
 }
 
 export const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
-  const { openQuoteModal } = useStore();
+  const { openQuoteModal, getProductWhatsAppUrl } = useStore();
 
   const imgSrc = product.images?.[0]?.url || 'https://images.unsplash.com/photo-1540555700478-4be289fbecef?auto=format&fit=crop&w=600&q=80';
   const linkTarget = `/products/${product.slug || product._id}`;
@@ -114,14 +114,25 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
           </div>
 
           <div className="flex items-center gap-1.5">
+            <a
+              href={getProductWhatsAppUrl(product)}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="p-2 rounded-xl bg-[#25D366]/10 hover:bg-[#25D366] text-[#128C7E] hover:text-white transition-all text-xs font-semibold flex items-center justify-center"
+              title={`Enquire on WhatsApp about ${product.name}`}
+              aria-label={`Enquire on WhatsApp about ${product.name}`}
+            >
+              <MessageCircle className="w-4 h-4" />
+            </a>
+
             <button
               type="button"
               onClick={() => openQuoteModal({ product, type: 'product' })}
-              className="px-3 py-2 rounded-xl bg-[#F4F1EA] hover:bg-[#9A6A3A] text-[#1E2A24] hover:text-white transition-all text-xs font-semibold flex items-center gap-1"
-              title="Request instant quotation"
+              className="px-2.5 py-2 rounded-xl bg-[#F4F1EA] hover:bg-[#9A6A3A] text-[#1E2A24] hover:text-white transition-all text-xs font-semibold flex items-center gap-1"
+              title="Request online quotation"
             >
               <MessageSquareText className="w-3.5 h-3.5" />
-              <span className="hidden sm:inline">Enquire</span>
+              <span className="hidden sm:inline">Quote</span>
             </button>
 
             <Link

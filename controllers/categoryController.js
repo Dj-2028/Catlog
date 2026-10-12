@@ -4,7 +4,17 @@ exports.seedCategories = async () => {
     try {
         const count = await Category.countDocuments();
         if (count === 0) {
-            const defaults = ['Uncategorized', 'Plywood', 'MDF & HDF Boards', 'Laminates', 'Door Hardware', 'Hinges & Channels', 'Cabinet Hardware', 'Adhesives', 'Screws & Fasteners', 'Tools'];
+            const defaults = [
+                'Plywood',
+                'Hardware supplies',
+                'Paints',
+                'Sunmica / decorative laminates',
+                'Plumbing supplies',
+                'Sanitaryware',
+                'Electrical supplies',
+                'Electronics',
+                'Interior-related materials and supplies',
+            ];
             await Category.insertMany(defaults.map(n => ({ name: n })));
             console.log('✓ Seeded default categories');
         }

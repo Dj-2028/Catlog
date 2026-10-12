@@ -8,7 +8,7 @@ export const CategoriesPage: React.FC = () => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    document.title = 'Browse Material Categories | Hardware & Plywood Store';
+    document.title = 'Product Categories | Shiv Shakti Ply And Hardware';
     fetchCategories(true)
       .then((data) => setCategories(data))
       .catch((err) => console.error('Failed to load categories', err))
@@ -20,13 +20,13 @@ export const CategoriesPage: React.FC = () => {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="text-center max-w-2xl mx-auto mb-14">
           <span className="text-xs font-bold uppercase tracking-widest text-[#9A6A3A] block mb-2">
-            Material Departments
+            Retail Departments
           </span>
           <h1 className="font-display font-extrabold text-3xl sm:text-4xl text-[#1E2A24] tracking-tight mb-3">
-            Explore All Categories
+            Product & Service Categories
           </h1>
           <p className="text-sm text-stone-600 leading-relaxed">
-            Browse our comprehensive inventory of marine plywood, architectural hardware, modular drawer channels, decorative laminates, and construction fasteners.
+            Browse our core departments: Paints, Hardware supplies, Plywood, Sunmica / decorative laminates, Plumbing supplies, Sanitaryware, Electrical supplies, Electronics, and Interior-related materials.
           </p>
         </div>
 

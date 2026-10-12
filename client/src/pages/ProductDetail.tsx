@@ -98,7 +98,8 @@ export const ProductDetail: React.FC = () => {
   const currentImage = product.images?.[activeImageIdx]?.url || product.images?.[0]?.url || 'https://images.unsplash.com/photo-1540555700478-4be289fbecef?auto=format&fit=crop&w=1000&q=80';
 
   const handleWhatsAppEnquiry = () => {
-    const message = `Hello ${settings?.storeName || 'Store'}!\n\nI am interested in:\n*${product.name}*\n(SKU: ${product.serialNo})\n\nI would like to know more about its price, available sizes, and current stock availability.`;
+    const categoryInfo = product.category ? `[${product.category}] ` : '';
+    const message = `Hello Shiv Shakti Ply And Hardware, I would like to enquire about ${categoryInfo}${product.name} (SKU: ${product.serialNo}). Please share the details.`;
     window.open(getWhatsAppUrl(message), '_blank');
   };
 

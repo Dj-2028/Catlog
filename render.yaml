@@ -1,0 +1,33 @@
+# Render Blueprint — Shiv Shakti Ply And Hardware
+# Deploy via Render Dashboard → New → Blueprint → select this repo.
+# Variables marked `sync: false` are secrets: Render will ask you to type them in.
+services:
+  - type: web
+    name: shiv-shakti-ply-hardware
+    runtime: node
+    plan: free            # change to "starter" to avoid cold starts
+    region: singapore     # closest Render region to India
+    buildCommand: npm install && npm run build
+    startCommand: npm start
+    healthCheckPath: /api/settings
+    envVars:
+      - key: NODE_ENV
+        value: production         # enables secure (HTTPS-only) admin cookies
+      - key: MONGO_URI
+        sync: false
+      - key: SESSION_SECRET
+        generateValue: true       # Render generates a strong random value
+      - key: ADMIN_USERNAME
+        sync: false
+      - key: ADMIN_PASSWORD
+        sync: false
+      - key: CLOUDINARY_CLOUD_NAME
+        sync: false
+      - key: CLOUDINARY_API_KEY
+        sync: false
+      - key: CLOUDINARY_API_SECRET
+        sync: false
+      - key: WHATSAPP_NUMBER
+        value: "9755672433"
+      - key: PHONE_NUMBER
+        value: "7987158644"

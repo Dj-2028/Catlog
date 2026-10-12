@@ -10,7 +10,7 @@ export const ServicesPage: React.FC = () => {
   const { openQuoteModal } = useStore();
 
   useEffect(() => {
-    document.title = 'Store Services | Custom Cutting, Hardware Consultation & Delivery';
+    document.title = 'Store Services | Shiv Shakti Ply And Hardware';
     fetchServices()
       .then((data) => setServices(data))
       .catch((err) => console.error('Failed to load services', err))
@@ -32,13 +32,13 @@ export const ServicesPage: React.FC = () => {
         {/* Header */}
         <div className="text-center max-w-2xl mx-auto mb-16">
           <span className="text-xs font-bold uppercase tracking-widest text-[#9A6A3A] block mb-2">
-            Professional Value-Add Services
+            Store Services & Support
           </span>
           <h1 className="font-display font-extrabold text-3xl sm:text-5xl text-[#1E2A24] tracking-tight mb-4">
-            Workshop & Job-Site Services
+            Material Consultation & Supply Services
           </h1>
           <p className="text-base text-stone-600 leading-relaxed font-normal">
-            Beyond supplying raw materials, we provide in-house dimension cutting, expert hardware scheduling, and dedicated site logistics for construction projects.
+            Backed by 15+ years of industry experience, we offer practical hardware consultation, project material estimation, contractor supplies, and delivery coordination in Jabalpur.
           </p>
         </div>
 

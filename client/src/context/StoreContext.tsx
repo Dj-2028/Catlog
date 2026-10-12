@@ -16,15 +16,21 @@ interface StoreContextValue {
   openQuoteModal: (config?: Partial<QuoteModalConfig>) => void;
   closeQuoteModal: () => void;
   getWhatsAppUrl: (message?: string) => string;
+  getProductWhatsAppUrl: (productOrCategory: { name?: string; category?: string; serialNo?: string } | string) => string;
 }
 
 const defaultSettings: StoreSettings = {
-  storeName: 'Shree Hardware & Plywood',
-  tagline: 'Quality Materials. Reliable Hardware. Built for Every Project.',
-  phone: '+91 98765 43210',
-  whatsapp: '919876543210',
-  email: 'sales@shreehardwareply.com',
-  address: 'Plot 42, Industrial Area, Katangi Road, Jabalpur, Madhya Pradesh 482002',
+  storeName: 'Shiv Shakti Ply And Hardware',
+  tagline: 'Quality Building & Interior Materials | 15+ Years of Experience',
+  established: '15+ Years',
+  phone: '7987158644',
+  alternatePhone: '',
+  whatsapp: '9755672433',
+  email: '',
+  address: 'Narmada Road, Bhim Nagar, Polipather, Gwarighat, Jabalpur, Madhya Pradesh 482001',
+  businessHours: ['Open daily from 10:00 AM'],
+  mapUrl: 'https://share.google/cPLJQiTvGPre2xRWt',
+  mapEmbedUrl: 'https://maps.google.com/maps?q=Shiv+Shakti+Ply+And+Hardware+Narmada+Road+Polipather+Gwarighat+Jabalpur&t=&z=15&ie=UTF8&iwloc=&output=embed',
 };
 
 const StoreContext = createContext<StoreContextValue>({
@@ -34,6 +40,7 @@ const StoreContext = createContext<StoreContextValue>({
   openQuoteModal: () => {},
   closeQuoteModal: () => {},
   getWhatsAppUrl: () => '',
+  getProductWhatsAppUrl: () => '',
 });
 
 export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
@@ -46,7 +53,7 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       .then((data) => {
         if (data && data.storeName) {
           setSettings(data);
-          document.title = `${data.storeName} | Quality Hardware & Plywood Materials`;
+          document.title = `${data.storeName} | 15+ Years Experience | Jabalpur`;
         }
       })
       .catch((err) => {
@@ -70,12 +77,34 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     setQuoteModal({ isOpen: false });
   };
 
+  const getCleanWhatsAppNumber = () => {
+    const rawNumber = settings?.whatsapp || '9755672433';
+    const digitsOnly = rawNumber.replace(/\D/g, '');
+    if (digitsOnly.length === 10) return `91${digitsOnly}`;
+    if (digitsOnly.startsWith('91')) return digitsOnly;
+    return digitsOnly || '919755672433';
+  };
+
   const getWhatsAppUrl = (customText?: string) => {
-    const rawNumber = settings?.whatsapp || '919876543210';
-    const cleanNumber = rawNumber.replace(/\D/g, '');
-    const defaultText = `Hello! I would like to enquire about your products and services at ${settings?.storeName || 'your store'}.`;
+    const cleanNumber = getCleanWhatsAppNumber();
+    const defaultText = `Hello Shiv Shakti Ply And Hardware, I would like to enquire about your products. Please share the details.`;
     const message = customText || defaultText;
-    return `https://api.whatsapp.com/send?phone=${cleanNumber}&text=${encodeURIComponent(message)}`;
+    return `https://wa.me/${cleanNumber}?text=${encodeURIComponent(message)}`;
+  };
+
+  const getProductWhatsAppUrl = (item: { name?: string; category?: string; serialNo?: string } | string) => {
+    const cleanNumber = getCleanWhatsAppNumber();
+    let message = '';
+    if (typeof item === 'string') {
+      message = `Hello Shiv Shakti Ply And Hardware, I would like to enquire about ${item}. Please share the details.`;
+    } else {
+      const parts: string[] = [];
+      if (item.category) parts.push(item.category);
+      if (item.name) parts.push(item.name);
+      const label = parts.length > 0 ? parts.join(' - ') : 'your products';
+      message = `Hello Shiv Shakti Ply And Hardware, I would like to enquire about ${label}. Please share the details.`;
+    }
+    return `https://wa.me/${cleanNumber}?text=${encodeURIComponent(message)}`;
   };
 
   return (
@@ -87,6 +116,7 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         openQuoteModal,
         closeQuoteModal,
         getWhatsAppUrl,
+        getProductWhatsAppUrl,
       }}
     >
       {children}

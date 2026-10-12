@@ -1,205 +1,72 @@
 <!-- About Hero -->
-<section class="hero-mesh relative overflow-hidden">
+<section class="hero-mesh relative overflow-hidden bg-[#1E2A24] text-white">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20 md:py-28">
         <div class="text-center max-w-3xl mx-auto fade-in-up">
-            <h1 class="font-display font-extrabold text-4xl md:text-5xl text-surface-700 dark:text-white mb-6">About
-                <span class="gradient-text">Inhouse Printing</span>
+            <span class="inline-block px-4 py-1.5 rounded-full bg-[#9A6A3A]/20 border border-[#9A6A3A]/30 text-[#C4925D] text-xs font-semibold mb-4">
+                15+ Years Experience in Jabalpur
+            </span>
+            <h1 class="font-display font-extrabold text-4xl md:text-5xl text-white mb-6">
+                About Shiv Shakti Ply And Hardware
             </h1>
-            <p class="text-surface-500 dark:text-surface-400 text-lg leading-relaxed">Your trusted partner for premium
-                custom manufactured
-                products since 2010. We combine traditional craftsmanship with modern technology.</p>
+            <p class="text-[#F4F1EA]/85 text-lg leading-relaxed">
+                Your trusted local destination for quality plywood, hardware supplies, paints, laminates, plumbing, sanitaryware, and electrical essentials in Jabalpur.
+            </p>
         </div>
     </div>
-    <div class="absolute top-20 left-10 w-72 h-72 bg-brand-500/5 rounded-full blur-3xl"></div>
 </section>
 
-<!-- Capabilities -->
-<section class="py-16 md:py-24">
+<!-- Core Product Departments -->
+<section class="py-16 md:py-24 bg-white">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <h2 class="font-display font-bold text-3xl text-surface-700 dark:text-[#f5f0eb] mb-10 text-center">What We
-            Manufacture</h2>
+        <h2 class="font-display font-bold text-3xl text-surface-700 dark:text-[#f5f0eb] mb-10 text-center">
+            Our Key Departments
+        </h2>
         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-            <% const capabilities=[ { icon: '🔑' , title: 'Custom Key Chains' ,
-                desc: 'Metal, acrylic, PVC, and leather key chains with custom shapes, logos, and engravings. Perfect for branding and promotions.'
-                }, { icon: '🏆' , title: 'Trophies & Awards' ,
-                desc: 'Elegant crystal, metal, and wooden trophies for corporate events, sports tournaments, and academic achievements.'
-                }, { icon: '🎁' , title: 'Gift Items' ,
-                desc: 'Bespoke corporate gifts, commemorative items, and personalized souvenirs for all occasions.' }, {
-                icon: '💳' , title: 'Visiting Cards' ,
-                desc: 'Premium business cards on luxury paper stocks with embossing, foil stamping, and die-cut options.'
-                }, { icon: '📄' , title: 'Pamphlets & Brochures' ,
-                desc: 'High quality offset and digital printed materials: flyers, catalogs, booklets, and marketing collateral.'
-                }, { icon: '⚙️' , title: 'Custom Projects' ,
-                desc: 'Have something unique in mind? Our in-house design team and manufacturing facility can bring any idea to life.'
-                }, ]; %>
-                <% capabilities.forEach(cap=> { %>
-                    <div
-                        class="p-6 rounded-2xl bg-white dark:bg-[#231e1a] border border-surface-200 dark:border-[#3d3730] hover:border-brand-400 transition-colors group shadow-sm">
-                        <span class="text-4xl block mb-4">
-                            <%= cap.icon %>
-                        </span>
-                        <h3
-                            class="font-display font-semibold text-surface-700 dark:text-[#f5f0eb] text-xl mb-2 group-hover:text-brand-600 transition-colors">
-                            <%= cap.title %>
-                        </h3>
-                        <p class="text-surface-500 dark:text-[#a09890] text-sm leading-relaxed">
-                            <%= cap.desc %>
-                        </p>
-                    </div>
-                    <% }) %>
-        </div>
-    </div>
-</section>
-
-<!-- Stats -->
-<section class="border-y border-surface-200 dark:border-[#3d3730] bg-surface-100 dark:bg-[#1c1a17]">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-        <div class="grid grid-cols-2 md:grid-cols-4 gap-8 text-center">
-            <div>
-                <div class="font-display font-bold text-3xl md:text-4xl text-brand-500 mb-1">15+</div>
-                <div class="text-surface-500 dark:text-[#a09890] text-sm">Years Experience</div>
-            </div>
-            <div>
-                <div class="font-display font-bold text-3xl md:text-4xl text-brand-500 mb-1">5000+</div>
-                <div class="text-surface-500 dark:text-[#a09890] text-sm">Products Delivered</div>
-            </div>
-            <div>
-                <div class="font-display font-bold text-3xl md:text-4xl text-brand-500 mb-1">500+</div>
-                <div class="text-surface-500 dark:text-[#a09890] text-sm">Happy Clients</div>
-            </div>
-            <div>
-                <div class="font-display font-bold text-3xl md:text-4xl text-brand-500 mb-1">100%</div>
-                <div class="text-surface-500 dark:text-[#a09890] text-sm">Custom Made</div>
-            </div>
-        </div>
-    </div>
-</section>
-
-<!-- Contact Section -->
-<section id="contact" class="py-16 md:py-24">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div class="grid grid-cols-1 lg:grid-cols-2 gap-12">
-            <!-- Contact Info -->
-            <div>
-                <h2 class="font-display font-bold text-3xl text-surface-700 dark:text-[#f5f0eb] mb-6">Get In Touch</h2>
-                <p class="text-surface-500 dark:text-[#a09890] leading-relaxed mb-8">Ready to start your project? Reach
-                    out to us for custom
-                    quotes, bulk pricing, or any questions about our manufacturing capabilities.</p>
-
-                <div class="space-y-6">
-                    <div class="flex items-start gap-4">
-                        <div
-                            class="w-10 h-10 rounded-xl bg-brand-100 dark:bg-brand-900/30 flex items-center justify-center flex-shrink-0">
-                            <svg class="w-5 h-5 text-brand-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                    d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                    d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
-                            </svg>
-                        </div>
-                        <div>
-                            <h4 class="font-semibold text-surface-700 dark:text-[#f5f0eb] mb-1">Factory Address</h4>
-                            <p class="text-surface-500 dark:text-[#a09890] text-sm">Star City, 261/C, Near Nakshtra
-                                Nagar Office, Nakshtra
-                                Nagar,<br />Katangi Rd, Karmeta, Jabalpur, Madhya Pradesh 482002</p>
-                        </div>
-                    </div>
-
-                    <div class="flex items-start gap-4">
-                        <div
-                            class="w-10 h-10 rounded-xl bg-brand-100 dark:bg-brand-900/30 flex items-center justify-center flex-shrink-0">
-                            <svg class="w-5 h-5 text-brand-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                    d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
-                            </svg>
-                        </div>
-                        <div>
-                            <h4 class="font-semibold text-surface-700 dark:text-[#f5f0eb] mb-1">Phone</h4>
-                             <p class="text-surface-500 dark:text-[#a09890] text-sm"><a href="https://api.whatsapp.com/send?phone=<%= String(whatsappNumber).replace(/[^0-9]/g, '') %>&text=<%= encodeURIComponent('Hello! I am inquiring from your website.') %>"
-                                    target="_blank" rel="noopener noreferrer"
-                                    class="hover:text-brand-600 dark:hover:text-brand-400 transition-colors">+91
-                                    834-901-7574</a><br />Mon–Sat,
-                                9am–6pm IST</p>
-                        </div>
-                    </div>
-
-                    <div class="flex items-start gap-4">
-                        <div
-                            class="w-10 h-10 rounded-xl bg-brand-100 dark:bg-brand-900/30 flex items-center justify-center flex-shrink-0">
-                            <svg class="w-5 h-5 text-brand-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                    d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-                            </svg>
-                        </div>
-                        <div>
-                            <h4 class="font-semibold text-surface-700 dark:text-[#f5f0eb] mb-1">Email</h4>
-                            <p class="text-surface-500 dark:text-[#a09890] text-sm"><a
-                                    href="mailto:inhouseprintingjbp@gmail.com"
-                                    class="hover:text-brand-600 dark:hover:text-brand-400 transition-colors">inhouseprintingjbp@gmail.com</a><br />
-                            </p>
-                        </div>
-                    </div>
+            <% const capabilities=[
+                { icon: '🪵' , title: 'Plywood & Sheets' , desc: 'Commercial MR and boiling waterproof BWP marine plywood sheets for modular furniture, kitchens, and wardrobes.' },
+                { icon: '🔧' , title: 'Hardware Supplies' , desc: 'Architectural door locks, stainless steel handles, concealed hinges, telescopic drawer channels, and fasteners.' },
+                { icon: '🎨' , title: 'Paints & Primers' , desc: 'Interior and exterior emulsion wall paints, primers, enamels, and protective timber coatings.' },
+                { icon: '🪚' , title: 'Sunmica & Decorative Laminates' , desc: 'High-pressure decorative laminates, woodgrain textures, and durable surface sunmica sheets.' },
+                { icon: '🚰' , title: 'Plumbing Supplies' , desc: 'CPVC & UPVC pipes, brass connectors, valves, and water drainage connections.' },
+                { icon: '🚿' , title: 'Sanitaryware' , desc: 'Ceramic wash basins, modern bathroom fittings, and sanitary accessories for residential installations.' },
+                { icon: '⚡' , title: 'Electrical Supplies' , desc: 'Modular switch plates, conduits, wiring supplies, and domestic electrical fittings.' },
+                { icon: '🔌' , title: 'Electronics' , desc: 'Electronic accessories, installation fittings, and utility hardware.' },
+                { icon: '🏠' , title: 'Interior Materials' , desc: 'Decorative louvers, wall mouldings, edge bands, and architectural finishing supplies.' }
+            ]; %>
+            <% capabilities.forEach(cap=> { %>
+                <div class="p-6 rounded-2xl bg-white border border-surface-200 hover:border-[#9A6A3A] transition-colors group shadow-sm">
+                    <span class="text-4xl block mb-4">
+                        <%= cap.icon %>
+                    </span>
+                    <h3 class="font-display font-semibold text-surface-700 text-xl mb-2 group-hover:text-[#9A6A3A] transition-colors">
+                        <%= cap.title %>
+                    </h3>
+                    <p class="text-surface-500 text-sm leading-relaxed">
+                        <%= cap.desc %>
+                    </p>
                 </div>
-            </div>
+            <% }) %>
+        </div>
+    </div>
+</section>
 
-            <!-- Contact Form — submits via mailto so it opens the device email client pre-filled -->
-            <div class="glass rounded-2xl p-8">
-                <h3 class="font-display font-semibold text-xl text-surface-700 dark:text-[#f5f0eb] mb-6">Send Us a
-                    Message</h3>
-                <form id="contactForm" class="space-y-4" onsubmit="sendMail(event)">
-                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                        <div>
-                            <label
-                                class="block text-sm font-medium text-surface-500 dark:text-[#a09890] mb-1.5">Name</label>
-                            <input type="text" id="cfName" required
-                                class="w-full px-4 py-2.5 rounded-xl bg-surface-100 dark:bg-[#2a2520] border border-surface-200 dark:border-[#3d3730] text-surface-700 dark:text-[#e8e0d8] placeholder-surface-400 focus:outline-none focus:border-brand-500 focus:ring-1 focus:ring-brand-500 text-sm"
-                                placeholder="Your name" />
-                        </div>
-                        <div>
-                            <label
-                                class="block text-sm font-medium text-surface-500 dark:text-[#a09890] mb-1.5">Phone</label>
-                            <input type="tel" id="cfPhone"
-                                class="w-full px-4 py-2.5 rounded-xl bg-surface-100 dark:bg-[#2a2520] border border-surface-200 dark:border-[#3d3730] text-surface-700 dark:text-[#e8e0d8] placeholder-surface-400 focus:outline-none focus:border-brand-500 focus:ring-1 focus:ring-brand-500 text-sm"
-                                placeholder="+91 999-999-9999" />
-                        </div>
-                    </div>
-                    <div>
-                        <label class="block text-sm font-medium text-surface-500 dark:text-[#a09890] mb-1.5">Your
-                            Email</label>
-                        <input type="email" id="cfEmail" required
-                            class="w-full px-4 py-2.5 rounded-xl bg-surface-100 dark:bg-[#2a2520] border border-surface-200 dark:border-[#3d3730] text-surface-700 dark:text-[#e8e0d8] placeholder-surface-400 focus:outline-none focus:border-brand-500 focus:ring-1 focus:ring-brand-500 text-sm"
-                            placeholder="you@company.com" />
-                    </div>
-                    <div>
-                        <label
-                            class="block text-sm font-medium text-surface-500 dark:text-[#a09890] mb-1.5">Message</label>
-                        <textarea rows="4" id="cfMessage" required
-                            class="w-full px-4 py-2.5 rounded-xl bg-surface-100 dark:bg-[#2a2520] border border-surface-200 dark:border-[#3d3730] text-surface-700 dark:text-[#e8e0d8] placeholder-surface-400 focus:outline-none focus:border-brand-500 focus:ring-1 focus:ring-brand-500 text-sm resize-none"
-                            placeholder="Tell us about your requirements..."></textarea>
-                    </div>
-                    <button type="submit"
-                        class="w-full py-3 rounded-xl bg-gradient-to-r from-brand-600 to-brand-500 text-white font-semibold hover:from-brand-500 hover:to-brand-400 transition-all shadow-lg shadow-brand-500/25">
-                        Send Message
-                    </button>
-                </form>
-                <script>
-                    function sendMail(e) {
-                        e.preventDefault();
-                        var name = document.getElementById('cfName').value.trim();
-                        var phone = document.getElementById('cfPhone').value.trim();
-                        var email = document.getElementById('cfEmail').value.trim();
-                        var msg = document.getElementById('cfMessage').value.trim();
-                        var subject = encodeURIComponent('Inquiry from ' + name);
-                        var body = encodeURIComponent(
-                            'Name: ' + name + '\n' +
-                            'Phone: ' + (phone || 'N/A') + '\n' +
-                            'Email: ' + email + '\n\n' +
-                            'Message:\n' + msg
-                        );
-                        window.location.href = 'mailto:inhouseprintingjbp@gmail.com?subject=' + subject + '&body=' + body;
-                    }
-                </script>
-            </div>
+<!-- Location & Contact -->
+<section class="border-y border-surface-200 bg-surface-100 py-16">
+    <div class="max-w-4xl mx-auto px-4 text-center">
+        <h2 class="font-display font-bold text-3xl text-surface-800 mb-4">Visit Our Store in Jabalpur</h2>
+        <p class="text-surface-600 mb-6 text-sm sm:text-base">
+            Narmada Road, Bhim Nagar, Polipather, Gwarighat, Jabalpur, Madhya Pradesh 482001
+        </p>
+        <div class="flex flex-wrap justify-center gap-4">
+            <a href="tel:7987158644" class="px-6 py-3 rounded-xl bg-[#1E2A24] text-white text-xs font-semibold">
+                Call: 7987158644
+            </a>
+            <a href="https://wa.me/919755672433?text=<%= encodeURIComponent('Hello Shiv Shakti Ply And Hardware, I would like to enquire about your products. Please share the details.') %>" target="_blank" rel="noopener noreferrer" class="px-6 py-3 rounded-xl bg-[#25D366] text-white text-xs font-semibold">
+                WhatsApp: 9755672433
+            </a>
+            <a href="https://share.google/cPLJQiTvGPre2xRWt" target="_blank" rel="noopener noreferrer" class="px-6 py-3 rounded-xl border border-surface-300 text-surface-800 text-xs font-semibold">
+                Google Maps Location
+            </a>
         </div>
     </div>
 </section>

@@ -3,11 +3,12 @@ import { MessageCircle } from 'lucide-react';
 import { useStore } from '../context/StoreContext';
 
 export const WhatsAppFloatingButton: React.FC = () => {
-  const { settings, getWhatsAppUrl } = useStore();
+  const { getWhatsAppUrl } = useStore();
 
   const handleOpen = () => {
-    const text = `Hello ${settings?.storeName || 'Store'}! I am browsing your website and would like to enquire about plywood and hardware material availability.`;
-    window.open(getWhatsAppUrl(text), '_blank');
+    // Opens WhatsApp with the prompt pre-filled enquiry message:
+    // “Hello Shiv Shakti Ply And Hardware, I would like to enquire about your products. Please share the details.”
+    window.open(getWhatsAppUrl(), '_blank');
   };
 
   return (

@@ -4,7 +4,7 @@ import { useStore } from '../context/StoreContext';
 import { submitEnquiry } from '../services/enquiries';
 
 export const QuoteModal: React.FC = () => {
-  const { quoteModal, closeQuoteModal, settings, getWhatsAppUrl } = useStore();
+  const { quoteModal, closeQuoteModal, getWhatsAppUrl } = useStore();
   const { isOpen, product, service, type = 'quote' } = quoteModal;
 
   const [name, setName] = useState('');
@@ -67,8 +67,13 @@ export const QuoteModal: React.FC = () => {
   };
 
   const handleWhatsAppDirect = () => {
-    const itemName = product ? product.name : service ? service.title : 'Materials';
-    const text = `Hello ${settings?.storeName || 'Store'}!\n\nI am interested in: *${itemName}*${quantity ? `\nEstimated Quantity: ${quantity}` : ''}\n\n${message || 'Please share pricing, available sheet sizes, and delivery timeline.'}\n\nMy Name: ${name || 'Customer'}\nContact: ${phone || ''}`;
+    let target = 'your products';
+    if (product) {
+      target = `${product.category ? `[${product.category}] ` : ''}${product.name}`;
+    } else if (service) {
+      target = service.title;
+    }
+    const text = `Hello Shiv Shakti Ply And Hardware, I would like to enquire about ${target}.${quantity ? ` Quantity: ${quantity}.` : ''} Please share the details.${name ? ` My name is ${name}.` : ''}`;
     window.open(getWhatsAppUrl(text), '_blank');
   };
 
