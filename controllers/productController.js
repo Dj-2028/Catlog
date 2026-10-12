@@ -1,3 +1,6 @@
+const fs = require('fs');
+const path = require('path');
+const mongoose = require('mongoose');
 const Product = require('../models/Product');
 const Category = require('../models/Category');
 const cloudinary = require('../config/cloudinary');
@@ -8,7 +11,19 @@ const SORT_MAP = {
     price_asc: { price: 1 },
     price_desc: { price: -1 },
     name: { name: 1 },
+    name_asc: { name: 1 },
+    name_desc: { name: -1 },
 };
+
+const AVAILABILITY_VALUES = ['in_stock', 'limited', 'on_order', 'out_of_stock'];
+
+function escapeRegex(str) {
+    return String(str).replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
+
+function isAdminRequest(req) {
+    return Boolean(req.session && req.session.isAdmin);
+}
 
 function getSortOption(sort) {
     return SORT_MAP[sort] || SORT_MAP.newest;
@@ -18,9 +33,14 @@ async function destroyImages(images) {
     if (!images || images.length === 0) return;
     const promises = images
         .filter((img) => img.public_id)
-        .map((img) =>
-            cloudinary.uploader.destroy(img.public_id).catch(() => { })
-        );
+        .map((img) => {
+            // Images stored by the local-disk upload fallback
+            if (img.url && img.url.startsWith('/uploads/')) {
+                const file = path.join(__dirname, '..', 'public', 'uploads', path.basename(img.url));
+                return fs.promises.unlink(file).catch(() => { });
+            }
+            return cloudinary.uploader.destroy(img.public_id).catch(() => { });
+        });
     await Promise.allSettled(promises);
 }
 
@@ -164,24 +184,43 @@ exports.getAboutPage = (req, res) => {
 
 exports.listProducts = async (req, res, next) => {
     try {
-        const { q, category, page = 1, limit = 50, sort } = req.query;
+        const { q, category, brand, availability, featured, page = 1, limit = 50, sort } = req.query;
         const query = { isDeleted: { $ne: true } };
 
-        if (category && category !== 'All') query.category = category;
-        if (q && q.trim()) {
+        // Drafts are only visible to the logged-in admin
+        if (!isAdminRequest(req)) query.isPublished = true;
+
+        if (category && category !== 'All') {
+            const cats = String(category).split(',').map((c) => c.trim()).filter(Boolean);
+            query.category = cats.length > 1 ? { $in: cats } : cats[0];
+        }
+        if (brand) {
+            const brands = String(brand).split(',').map((b) => b.trim()).filter(Boolean);
+            if (brands.length) query.brand = { $in: brands };
+        }
+        if (availability) {
+            const values = String(availability).split(',').filter((a) => AVAILABILITY_VALUES.includes(a));
+            if (values.length) query.availability = { $in: values };
+        }
+        if (featured === 'true' || featured === '1') query.isFeatured = true;
+        if (q && String(q).trim()) {
+            const rx = { $regex: escapeRegex(String(q).trim()), $options: 'i' };
             query.$or = [
-                { name: { $regex: q.trim(), $options: 'i' } },
-                { serialNo: { $regex: q.trim(), $options: 'i' } },
+                { name: rx },
+                { serialNo: rx },
+                { brand: rx },
+                { category: rx },
+                { description: rx },
             ];
         }
 
-        const pageNum = Math.max(1, parseInt(page));
-        const limitNum = Math.min(100, Math.max(1, parseInt(limit)));
+        const pageNum = Math.max(1, parseInt(page) || 1);
+        const limitNum = Math.min(100, Math.max(1, parseInt(limit) || 50));
         const skip = (pageNum - 1) * limitNum;
 
         const [products, totalCount] = await Promise.all([
             Product.find(query)
-                .sort(getSortOption(sort))
+                .sort({ ...getSortOption(sort), _id: -1 })
                 .skip(skip)
                 .limit(limitNum),
             Product.countDocuments(query),
@@ -200,10 +239,46 @@ exports.listProducts = async (req, res, next) => {
     }
 };
 
+// Facets for the public catalog filters (brands + availability counts)
+exports.getProductFilters = async (req, res, next) => {
+    try {
+        const match = { isDeleted: { $ne: true }, isPublished: true };
+        const [brands, availability, categories] = await Promise.all([
+            Product.aggregate([
+                { $match: { ...match, brand: { $nin: ['', null] } } },
+                { $group: { _id: '$brand', count: { $sum: 1 } } },
+                { $sort: { _id: 1 } },
+            ]),
+            Product.aggregate([
+                { $match: match },
+                { $group: { _id: '$availability', count: { $sum: 1 } } },
+            ]),
+            Product.aggregate([
+                { $match: match },
+                { $group: { _id: '$category', count: { $sum: 1 } } },
+                { $sort: { _id: 1 } },
+            ]),
+        ]);
+        res.json({
+            brands: brands.map((b) => ({ name: b._id, count: b.count })),
+            availability: availability
+                .map((a) => ({ value: a._id || 'in_stock', count: a.count }))
+                .sort((a, b) => AVAILABILITY_VALUES.indexOf(a.value) - AVAILABILITY_VALUES.indexOf(b.value)),
+            categories: categories.map((c) => ({ name: c._id, count: c.count })),
+        });
+    } catch (err) {
+        next(err);
+    }
+};
+
 exports.getProduct = async (req, res, next) => {
     try {
-        const product = await Product.findById(req.params.id);
-        if (!product || product.isDeleted)
+        const { id } = req.params;
+        // Accept either a Mongo ObjectId or the product slug
+        const product = mongoose.isValidObjectId(id)
+            ? await Product.findById(id)
+            : await Product.findOne({ slug: id });
+        if (!product || product.isDeleted || (!product.isPublished && !isAdminRequest(req)))
             return res.status(404).json({ error: 'Product not found' });
         res.json(product);
     } catch (err) {
@@ -222,6 +297,8 @@ exports.createProduct = async (req, res, next) => {
             specifications,
             isPublished,
             isFeatured,
+            brand,
+            availability,
         } = req.body;
 
         const images = buildImageObjects(req.files);
@@ -246,6 +323,8 @@ exports.createProduct = async (req, res, next) => {
             price: parseFloat(price) || 0,
             serialNo,
             category: category || 'Uncategorized',
+            brand: brand || '',
+            availability: availability || 'in_stock',
             specifications: specs,
             isPublished: isPublished === 'true' || isPublished === true,
             isFeatured: isFeatured === 'true' || isFeatured === true,
@@ -278,6 +357,8 @@ exports.updateProduct = async (req, res, next) => {
             isPublished,
             isFeatured,
             existingImages,
+            brand,
+            availability,
         } = req.body;
 
         let keepImages = [];
@@ -325,6 +406,8 @@ exports.updateProduct = async (req, res, next) => {
         if (price !== undefined) updateFields.price = parseFloat(price) || 0;
         if (name && name.trim()) updateFields.name = name.trim();
         if (serialNo && serialNo.trim()) updateFields.serialNo = serialNo.trim();
+        if (brand !== undefined) updateFields.brand = String(brand).trim();
+        if (availability !== undefined && availability !== '') updateFields.availability = availability;
 
         const updated = await Product.findByIdAndUpdate(
             req.params.id,

@@ -4,7 +4,7 @@ exports.seedCategories = async () => {
     try {
         const count = await Category.countDocuments();
         if (count === 0) {
-            const defaults = ['Uncategorized', 'Key Chains', 'Trophies', 'Gift Items', 'Visiting Cards', 'Pamphlets'];
+            const defaults = ['Uncategorized', 'Plywood', 'MDF & HDF Boards', 'Laminates', 'Door Hardware', 'Hinges & Channels', 'Cabinet Hardware', 'Adhesives', 'Screws & Fasteners', 'Tools'];
             await Category.insertMany(defaults.map(n => ({ name: n })));
             console.log('✓ Seeded default categories');
         }
@@ -15,8 +15,31 @@ exports.seedCategories = async () => {
 
 exports.getCategories = async (req, res, next) => {
     try {
-        const categories = await Category.find().sort({ name: 1 });
-        res.json(categories);
+        const categories = await Category.find().sort({ name: 1 }).lean();
+
+        if (req.query.withCounts !== '1' && req.query.withCounts !== 'true') {
+            return res.json(categories);
+        }
+
+        // Enrich with published product counts and a cover image (first product image)
+        const Product = require('../models/Product');
+        const stats = await Product.aggregate([
+            { $match: { isDeleted: { $ne: true }, isPublished: true } },
+            { $sort: { isFeatured: -1, dateAdded: -1 } },
+            {
+                $group: {
+                    _id: '$category',
+                    productCount: { $sum: 1 },
+                    coverImage: { $first: { $arrayElemAt: ['$images.url', 0] } },
+                },
+            },
+        ]);
+        const byName = new Map(stats.map((s) => [s._id, s]));
+        res.json(categories.map((c) => ({
+            ...c,
+            productCount: byName.get(c.name)?.productCount || 0,
+            coverImage: byName.get(c.name)?.coverImage || null,
+        })));
     } catch (err) {
         next(err);
     }

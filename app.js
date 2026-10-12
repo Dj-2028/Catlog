@@ -19,6 +19,8 @@ app.use(expressLayouts);
 app.set('layout', 'layout');
 app.set('trust proxy', 1);
 
+const fs = require('fs');
+
 // Helmet
 app.use(
     helmet({
@@ -29,11 +31,11 @@ app.use(
                     'https://cdn.tailwindcss.com', 'https:', 'http:'],
                 scriptSrcAttr: ["'unsafe-inline'"],
                 styleSrc: ["'self'", "'unsafe-inline'",
-                    'https://cdn.tailwindcss.com', 'https:', 'http:'],
-                fontSrc: ["'self'", 'https:', 'http:', 'data:'],
+                    'https://cdn.tailwindcss.com', 'https:', 'http:', 'https://fonts.googleapis.com'],
+                fontSrc: ["'self'", 'https:', 'http:', 'data:', 'https://fonts.gstatic.com'],
                 imgSrc: ["'self'", 'data:', 'blob:', 'https:', 'http:'],
-                connectSrc: ["'self'", 'https:'],
-                frameSrc: ["'none'"],
+                connectSrc: ["'self'", 'https:', 'http:'],
+                frameSrc: ["'self'", 'https://www.google.com', 'https://maps.google.com', 'https://*.google.com'],
                 objectSrc: ["'none'"],
             },
         },
@@ -41,19 +43,34 @@ app.use(
     })
 );
 
+// CORS for API and dev proxy
+app.use((req, res, next) => {
+    const origin = req.headers.origin;
+    if (origin) {
+        res.header('Access-Control-Allow-Origin', origin);
+        res.header('Access-Control-Allow-Credentials', 'true');
+    } else {
+        res.header('Access-Control-Allow-Origin', '*');
+    }
+    res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, PATCH, DELETE, OPTIONS');
+    res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Authorization');
+    if (req.method === 'OPTIONS') return res.sendStatus(200);
+    next();
+});
+
 // Rate limiters
 const authLimiter = rateLimit({
     windowMs: 15 * 60 * 1000,
-    max: 10,
+    max: 100,
     standardHeaders: true,
     legacyHeaders: false,
-    message: 'Too many requests from this IP, please try again after 15 minutes.',
+    message: 'Too many login attempts from this IP, please try again after 15 minutes.',
     skip: (req) => req.session && req.session.isAdmin,
 });
 
 const apiLimiter = rateLimit({
     windowMs: 10 * 60 * 1000,
-    max: 100,
+    max: 3000,
     standardHeaders: true,
     legacyHeaders: false,
     message: { error: 'Too many API requests, please slow down.' },
@@ -91,19 +108,46 @@ app.use((req, res, next) => {
     next();
 });
 
+// Client SPA static files
+const clientDist = path.join(__dirname, 'client', 'dist');
+if (fs.existsSync(clientDist)) {
+    app.use(express.static(clientDist));
+}
+
 // --------------- Routes ---------------
 const publicRoutes = require('./routes/public');
 const authRoutes = require('./routes/auth');
 const adminRoutes = require('./routes/admin');
 const apiRoutes = require('./routes/api');
 
-app.use('/', publicRoutes);
-app.use('/', authLimiter, authRoutes);
+app.use('/login', authLimiter);
+app.use('/', authRoutes);
 app.use('/', adminRoutes);
 app.use('/api', apiLimiter, apiRoutes);
 
+// If client build exists, serve React SPA index.html for frontend routes
+app.use((req, res, next) => {
+    if (
+        req.method === 'GET' &&
+        !req.originalUrl.startsWith('/api') &&
+        !req.originalUrl.startsWith('/admin') &&
+        !req.originalUrl.startsWith('/login') &&
+        !req.originalUrl.startsWith('/logout') &&
+        !req.originalUrl.startsWith('/uploads') &&
+        fs.existsSync(path.join(clientDist, 'index.html'))
+    ) {
+        return res.sendFile(path.join(clientDist, 'index.html'));
+    }
+    next();
+});
+
+app.use('/', publicRoutes);
+
 // --------------- 404 Handler ---------------
 app.use((req, res) => {
+    if (req.originalUrl.startsWith('/api/')) {
+        return res.status(404).json({ error: 'Endpoint not found' });
+    }
     res.status(404).render('error', {
         title: 'Page Not Found',
         message: 'The page you are looking for does not exist.',

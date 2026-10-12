@@ -48,6 +48,19 @@ const productSchema = new mongoose.Schema({
     default: 'Uncategorized',
     trim: true,
   },
+  brand: {
+    type: String,
+    default: '',
+    trim: true,
+  },
+  availability: {
+    type: String,
+    enum: {
+      values: ['in_stock', 'limited', 'on_order', 'out_of_stock'],
+      message: 'Invalid availability value',
+    },
+    default: 'in_stock',
+  },
   specifications: {
     type: mongoose.Schema.Types.Mixed,
     default: {},
@@ -76,6 +89,7 @@ productSchema.pre('save', function () {
 
 // ---------- Indexes ----------
 productSchema.index({ category: 1 });
+productSchema.index({ brand: 1 });
 productSchema.index({ isPublished: 1, dateAdded: -1 });
 productSchema.index({ isPublished: 1, isFeatured: 1 });
 productSchema.index({ name: 'text', serialNo: 'text' });
