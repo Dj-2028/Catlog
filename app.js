@@ -76,6 +76,35 @@ const apiLimiter = rateLimit({
     message: { error: 'Too many API requests, please slow down.' },
 });
 
+// --------------- Database ---------------
+// Cached connection so serverless (Vercel) invocations reuse it across requests.
+let dbPromise = null;
+function connectDB() {
+    if (!dbPromise) {
+        dbPromise = mongoose
+            .connect(process.env.MONGO_URI)
+            .then(async (conn) => {
+                console.log('✓ MongoDB connected');
+                await require('./controllers/categoryController').seedCategories();
+                return conn;
+            })
+            .catch((err) => {
+                dbPromise = null; // allow retry on next request
+                throw err;
+            });
+    }
+    return dbPromise;
+}
+
+app.use(async (req, res, next) => {
+    try {
+        await connectDB();
+        next();
+    } catch (err) {
+        next(err);
+    }
+});
+
 // --------------- Middleware ---------------
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
@@ -216,20 +245,21 @@ app.use((err, req, res, next) => {
 });
 
 // --------------- Start Server ---------------
-const PORT = process.env.PORT || 3000;
+// Only start a long-running server when executed directly (local / Render).
+// On Vercel, the exported app is imported by api/index.js instead.
+if (require.main === module) {
+    const PORT = process.env.PORT || 3000;
 
-mongoose
-    .connect(process.env.MONGO_URI)
-    .then(() => {
-        console.log('✓ MongoDB connected');
-        require('./controllers/categoryController').seedCategories();
-        app.listen(PORT, () => {
-            console.log(`✓ Server running on ${PORT}`);
+    connectDB()
+        .then(() => {
+            app.listen(PORT, () => {
+                console.log(`✓ Server running on ${PORT}`);
+            });
+        })
+        .catch((err) => {
+            console.error('✗ MongoDB connection error:', err.message);
+            process.exit(1);
         });
-    })
-    .catch((err) => {
-        console.error('✗ MongoDB connection error:', err.message);
-        process.exit(1);
-    });
+}
 
 module.exports = app;

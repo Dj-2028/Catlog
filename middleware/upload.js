@@ -41,8 +41,15 @@ function buildStorage() {
     }
 
     console.warn('⚠ Cloudinary not configured — using local disk uploads (public/uploads)');
+    if (process.env.VERCEL) {
+        console.error('✗ Cloudinary env vars are required on Vercel (read-only filesystem). Image uploads will fail.');
+    }
     const uploadDir = path.join(__dirname, '..', 'public', 'uploads');
-    fs.mkdirSync(uploadDir, { recursive: true });
+    try {
+        fs.mkdirSync(uploadDir, { recursive: true });
+    } catch (err) {
+        console.error('✗ Could not create upload dir:', err.message);
+    }
 
     const disk = multer.diskStorage({
         destination: uploadDir,

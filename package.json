@@ -5,6 +5,7 @@
   "scripts": {
     "start": "node app.js",
     "build": "npm install --prefix client --include=dev && npm run build --prefix client",
+    "vercel-build": "npm run build && node scripts/copy-public.js",
     "seed": "node seed.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
